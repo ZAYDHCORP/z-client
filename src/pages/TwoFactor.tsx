@@ -1,9 +1,5 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import Link from "next/link";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { Loader2, ShieldCheck, CheckCircle2, XCircle } from "lucide-react";
 import { api } from "@/lib/axios";
@@ -12,19 +8,11 @@ import { cachePendingTwoFactorToken, cacheUser, getPendingTwoFactorToken } from 
 
 const CODE_LENGTH = 6;
 
-export default function TwoFactorPage() {
-  return (
-    <Suspense fallback={null}>
-      <TwoFactorInner />
-    </Suspense>
-  );
-}
-
 type Status = "idle" | "success" | "error";
 
-function TwoFactorInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export default function TwoFactorPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const email = searchParams.get("email") ?? "";
   const pendingToken = searchParams.get("pendingToken") || getPendingTwoFactorToken();
 
@@ -151,8 +139,7 @@ function TwoFactorInner() {
       setStatus("success");
 
       setTimeout(() => {
-        router.push("/account");
-        router.refresh();
+        navigate("/account");
       }, 1100);
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -212,7 +199,7 @@ function TwoFactorInner() {
       footer={
         <>
           Wrong account?{" "}
-          <Link href="/signin" className="font-bold text-[#9a6d35]">
+          <Link to="/signin" className="font-bold text-[#9a6d35]">
             Back to Sign in
           </Link>
         </>

@@ -1,8 +1,5 @@
-"use client";
-
-import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { API } from "@/lib/constants";
 import { api } from "@/lib/axios";
@@ -20,16 +17,8 @@ type VerifyResponse = {
 };
 
 export default function TwoFactorSetupPage() {
-  return (
-    <Suspense fallback={null}>
-      <TwoFactorSetupInner />
-    </Suspense>
-  );
-}
-
-function TwoFactorSetupInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const email = searchParams.get("email") ?? "";
   const pendingToken = searchParams.get("pendingToken") || getPendingTwoFactorToken() || null;
 
@@ -144,7 +133,7 @@ const submit = async (verificationCode: string) => {
       setStage("backup-codes");
     } else {
       setStage("done");
-      window.setTimeout(() => router.push("/account"), 1400);
+      window.setTimeout(() => navigate("/account"), 1400);
     }
   } catch (err: unknown) {
     const e = err as { message?: string };
@@ -165,7 +154,7 @@ const submit = async (verificationCode: string) => {
         title="Set up two-step verification"
         subtitle="Use an authenticator app to protect your Gate account."
         footer={
-          <Link href="/account" className="font-bold text-[#9a6d35]">
+          <Link to="/account" className="font-bold text-[#9a6d35]">
             Back to account
           </Link>
         }
@@ -214,7 +203,7 @@ const submit = async (verificationCode: string) => {
 
           <button
             type="button"
-            onClick={() => router.push("/account")}
+            onClick={() => navigate("/account")}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-zinc-950 px-5 py-3.5 text-sm font-bold text-white transition hover:opacity-90 dark:bg-white dark:text-black"
           >
             I&apos;ve saved my codes — Continue
@@ -229,7 +218,7 @@ const submit = async (verificationCode: string) => {
       title="Set up two-step verification"
       subtitle="Use an authenticator app to protect your Gate account."
       footer={
-        <Link href="/account" className="font-bold text-[#9a6d35]">
+        <Link to="/account" className="font-bold text-[#9a6d35]">
           Back to account
         </Link>
       }
@@ -242,7 +231,7 @@ const submit = async (verificationCode: string) => {
         <div className="space-y-4">
           <p className="text-sm font-medium text-red-600">{error}</p>
           <Link
-            href="/account"
+            to="/account"
             className="block text-center text-sm font-semibold text-[#9a6d35] hover:underline"
           >
             Back to account

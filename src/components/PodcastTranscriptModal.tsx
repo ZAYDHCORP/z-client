@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import { X, Search, Copy, Check, Headphones, Play } from "lucide-react";
 

@@ -1,8 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useNavigate, Link } from "react-router-dom";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { OAuthButtons } from "@/components/auth/OAuthButtons";
 import { Loader2 } from "lucide-react";
@@ -12,7 +9,7 @@ import { getPasswordStrength } from "@/lib/password-strength";
 import { cachePendingTwoFactorToken, cacheUser } from "@/lib/client-auth";
 
 export default function SignUpPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -47,13 +44,13 @@ export default function SignUpPage() {
         cachePendingTwoFactorToken(pendingToken);
       }
       if (data?.twoFactorSetupRequired) {
-        router.push(
+        navigate(
           `/two-factor/setup?email=${encodeURIComponent(email)}&pendingToken=${encodeURIComponent(pendingToken ?? "")}`
         );
         return;
       }
       if (data?.requiresTwoFactor || data?.twoFactorRequired) {
-        router.push(
+        navigate(
           `/two-factor?email=${encodeURIComponent(email)}&pendingToken=${encodeURIComponent(pendingToken ?? "")}`
         );
         return;
@@ -61,8 +58,7 @@ export default function SignUpPage() {
       if (data?.user) cacheUser(data.user);
       else cacheUser({ email, name: `${firstName} ${lastName}`.trim(), role: "user", membership: "free" });
       cachePendingTwoFactorToken(null);
-      router.push("/account");
-      router.refresh();
+      navigate("/account");
     } catch (err: any) {
       setError(err?.message ?? "Could not create account. Please try again.");
     } finally {
@@ -77,7 +73,7 @@ export default function SignUpPage() {
       footer={
         <>
           Already have an account?{" "}
-          <Link href="/signin" className="font-bold text-[#9a6d35]">
+          <Link to="/signin" className="font-bold text-[#9a6d35]">
             Sign in
           </Link>
         </>
@@ -189,8 +185,8 @@ export default function SignUpPage() {
       </form>
       <p className="mt-6 text-center text-xs text-zinc-400">
         By continuing you agree to our{" "}
-        <Link href="/terms" className="underline">Terms</Link> and{" "}
-        <Link href="/privacy" className="underline">Privacy Policy</Link>.
+        <Link to="/terms" className="underline">Terms</Link> and{" "}
+        <Link to="/privacy" className="underline">Privacy Policy</Link>.
       </p>
     </AuthScreen>
   );

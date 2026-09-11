@@ -1,21 +1,19 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { getAdminSession, AdminSession } from "@/lib/admin-auth";
 
 export default function AdminPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [admin, setAdmin] = useState<AdminSession | null>(null);
 
   useEffect(() => {
     const session = getAdminSession();
     if (!session) {
-      router.replace("/admin/signin");
+      navigate("/admin/login", { replace: true });
       return;
     }
     setAdmin(session);
-  }, [router]);
+  }, [navigate]);
 
   if (!admin) {
     return (

@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { api } from "@/lib/axios";
@@ -32,7 +30,7 @@ export default function ForgotPasswordPage() {
       title="Reset your password"
       subtitle="Enter your account email and we will send a secure reset link."
       footer={
-        <Link href="/signin" className="font-bold text-[#9a6d35]">
+        <Link to="/signin" className="font-bold text-[#9a6d35]">
           Back to Sign in
         </Link>
       }

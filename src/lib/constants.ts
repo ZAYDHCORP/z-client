@@ -1,4 +1,4 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 console.log("BASE", BASE);
 export const API = {
   AUTH: {

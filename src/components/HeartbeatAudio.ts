@@ -1,5 +1,3 @@
-"use client";
-
 // Web Audio API Heartbeat Synthesizer
 // Produces an audible double-thump (lub-dub) synchronized with .gate-dot pulse
 export function playHeartbeatSound() {

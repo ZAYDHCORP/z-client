@@ -9,7 +9,7 @@ declare module "axios" {
 }
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 10000,
   withCredentials: true,
   headers: {
@@ -39,7 +39,7 @@ let refreshPromise: Promise<void> | null = null;
 
 const refreshAccessToken = async () => {
   await axios.post(
-    `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
+    `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
     {},
     { withCredentials: true },
   );

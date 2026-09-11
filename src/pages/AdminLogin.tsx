@@ -1,14 +1,12 @@
-"use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { api } from "@/lib/axios";
 import { API } from "@/lib/constants";
 import { setAdminSession } from "@/lib/admin-auth";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,8 +19,7 @@ export default function AdminLoginPage() {
     try {
       await api.post(API.ADMIN.LOGIN, { email, password });
       setAdminSession(email);
-      router.replace("/admin");
-      router.refresh();
+      navigate("/admin", { replace: true });
     } catch (err: any) {
       setError(err?.message ?? "Login failed.");
       setLoading(false);

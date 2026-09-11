@@ -1,10 +1,10 @@
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
 export default function TermsPage() {
   return (
     <main className="min-h-screen bg-[#f4f0e8] text-zinc-950 dark:bg-[#090908] dark:text-[#f6f0e5]">
       <div className="mx-auto max-w-2xl px-5 py-12">
-        <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-[#9a6d35]">
+        <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-[#9a6d35]">
           <span className="gate-dot heartbeat" />
           <span className="text-2xl gate-wordmark">Gate</span>
         </Link>
@@ -46,8 +46,8 @@ export default function TermsPage() {
           </p>
         </div>
         <p className="mt-10 text-center text-sm text-zinc-400">
-          <Link href="/privacy" className="underline">Privacy Policy</Link> ·{" "}
-          <Link href="/" className="underline">Back to Gate</Link>
+          <Link to="/privacy" className="underline">Privacy Policy</Link> ·{" "}
+          <Link to="/" className="underline">Back to Gate</Link>
         </p>
       </div>
     </main>

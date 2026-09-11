@@ -1,8 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useNavigate, Link } from "react-router-dom";
 import { Loader2, CheckCircle2, LogOut, ArrowLeft, ShieldOff } from "lucide-react";
 import { validatePassword } from "@/lib/validation";
 import { api } from "@/lib/axios";
@@ -23,7 +20,7 @@ type Profile = {
 };
 
 export default function AccountPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -44,7 +41,7 @@ export default function AccountPage() {
   useEffect(() => {
     const cached = getCachedUser();
     if (!cached?.email) {
-      router.replace("/signin?callbackUrl=/account");
+      navigate("/signin?callbackUrl=/account", { replace: true });
       setLoading(false);
       return;
     }
@@ -54,7 +51,7 @@ export default function AccountPage() {
     setName(cached.name ?? "");
     setImage(cached.image ?? "");
     setLoading(false);
-  }, [router]);
+  }, [navigate]);
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,8 +129,7 @@ export default function AccountPage() {
 
   const signOut = async () => {
     await logoutCurrentUser();
-    router.replace("/");
-    router.refresh();
+    navigate("/", { replace: true });
   };
 
   if (loading) {
@@ -149,7 +145,7 @@ export default function AccountPage() {
       <main className="flex min-h-screen items-center justify-center bg-[#f4f0e8] dark:bg-[#090908]">
         <div className="text-center">
           <p className="mb-4 text-zinc-600 dark:text-zinc-300">Session expired.</p>
-          <Link href="/signin" className="font-bold text-[#9a6d35]">
+          <Link to="/signin" className="font-bold text-[#9a6d35]">
             Sign in again
           </Link>
         </div>
@@ -164,14 +160,14 @@ export default function AccountPage() {
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_20%_10%,rgba(195,142,71,.25),transparent_28%),radial-gradient(circle_at_80%_5%,rgba(50,92,88,.18),transparent_30%)]" />
       <div className="mx-auto max-w-2xl px-5 py-10">
         <Link
-          href="/"
+          to="/"
           className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-[#9a6d35]"
         >
           <ArrowLeft size={16} /> Back to Gate
         </Link>
 
         <div className="flex items-center gap-4">
-          <Link href="/" className="gate-logo-wrapper cursor-pointer select-none">
+          <Link to="/" className="gate-logo-wrapper cursor-pointer select-none">
             <span className="gate-dot heartbeat" />
             <span className="text-4xl gate-wordmark gate-reveal">Gate</span>
           </Link>

@@ -1,5 +1,3 @@
-"use client";
-
 import { Logo } from "@/components/Logo";
 import {
   Activity,
@@ -37,7 +35,7 @@ import {
   FileCode,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { playHeartbeatSound } from "@/components/HeartbeatAudio";
 import GateReader, { BookSampleData } from "@/components/GateReader";
 import BookDetailModal, { BookItemData } from "@/components/BookDetailModal";
@@ -258,7 +256,7 @@ export default function Home() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [playing, setPlaying] = useState(false);
   const [user, setUser] = useState<ClientUser | null>(() => getCachedUser());
-  const router = useRouter();
+  const navigate = useNavigate();
   const signedIn = Boolean(user?.email);
   const userRole: "user" | "admin" =
     user?.role === "admin" ? "admin" : "user";
@@ -430,7 +428,7 @@ export default function Home() {
   const openAuth = (mode: "sign-in" | "sign-up" | "forgot" = "sign-in") => {
     const page =
       mode === "sign-up" ? "/signup" : mode === "forgot" ? "/forgot-password" : "/signin";
-    router.push(page);
+    navigate(page);
   };
 
   // Show the welcome banner the first time a real session is established

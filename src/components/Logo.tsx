@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 const LETTERS = ["G", "a", "t", "e"];
 
 export function Logo({

@@ -1,8 +1,5 @@
-"use client";
-
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useState } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/axios";
@@ -10,16 +7,8 @@ import { API } from "@/lib/constants";
 import { getPasswordStrength } from "@/lib/password-strength";
 
 export default function ResetPasswordPage() {
-  return (
-    <Suspense fallback={null}>
-      <ResetPasswordInner />
-    </Suspense>
-  );
-}
-
-function ResetPasswordInner() {
-  const router = useRouter();
-  const params = useSearchParams();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
   const token = params.get("token") ?? "";
 
   const [password, setPassword] = useState("");
@@ -55,7 +44,7 @@ function ResetPasswordInner() {
     try {
       await api.post(API.AUTH.RESET_PASS, { token, password });
       setDone(true);
-      setTimeout(() => router.push("/signin"), 2500);
+      setTimeout(() => navigate("/signin"), 2500);
     } catch (err: any) {
       setError(err?.message ?? "Reset failed. Please try again.");
     } finally {
@@ -68,7 +57,7 @@ function ResetPasswordInner() {
       title="Set a new password"
       subtitle="Choose a strong password you don't use anywhere else."
       footer={
-        <Link href="/signin" className="font-bold text-[#9a6d35]">
+        <Link to="/signin" className="font-bold text-[#9a6d35]">
           Back to Sign in
         </Link>
       }

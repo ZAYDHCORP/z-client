@@ -1,8 +1,5 @@
-"use client";
-
-import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { OAuthButtons } from "@/components/auth/OAuthButtons";
 import { Loader2 } from "lucide-react";
@@ -10,9 +7,9 @@ import { api } from "@/lib/axios";
 import { API } from "@/lib/constants";
 import { cachePendingTwoFactorToken, cacheUser } from "@/lib/client-auth";
 
-function SignInInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export default function SignInPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -46,14 +43,14 @@ function SignInInner() {
       }
 
       if (authData?.twoFactorSetupRequired) {
-        router.push(
+        navigate(
           `/two-factor/setup?email=${encodeURIComponent(email)}&pendingToken=${encodeURIComponent(pendingToken ?? "")}`
         );
         return;
       }
 
       if (authData?.requiresTwoFactor || authData?.twoFactorRequired) {
-        router.push(
+        navigate(
           `/two-factor?email=${encodeURIComponent(email)}&pendingToken=${encodeURIComponent(pendingToken ?? "")}`
         );
         return;
@@ -64,8 +61,7 @@ function SignInInner() {
       cachePendingTwoFactorToken(null);
 
       const callbackUrl = searchParams.get("callbackUrl") ?? "/account";
-      router.push(callbackUrl);
-      router.refresh();
+      navigate(callbackUrl);
     } catch (err: any) {
       setError(err?.message ?? "Invalid email or password. Please try again.");
     } finally {
@@ -80,7 +76,7 @@ function SignInInner() {
       footer={
         <>
           New to Gate?{" "}
-          <Link href="/signup" className="font-bold text-[#9a6d35]">
+          <Link to="/signup" className="font-bold text-[#9a6d35]">
             Create an account
           </Link>
         </>
@@ -126,23 +122,15 @@ function SignInInner() {
         </button>
       </form>
       <div className="mt-4 text-right">
-        <Link href="/forgot-password" className="text-sm font-semibold text-[#9a6d35]">
+        <Link to="/forgot-password" className="text-sm font-semibold text-[#9a6d35]">
           Forgot Password?
         </Link>
       </div>
       <p className="mt-6 text-center text-xs text-zinc-400">
         By continuing you agree to our{" "}
-        <Link href="/terms" className="underline">Terms</Link> and{" "}
-        <Link href="/privacy" className="underline">Privacy Policy</Link>.
+        <Link to="/terms" className="underline">Terms</Link> and{" "}
+        <Link to="/privacy" className="underline">Privacy Policy</Link>.
       </p>
     </AuthScreen>
-  );
-}
-
-export default function SignInPage() {
-  return (
-    <Suspense fallback={null}>
-      <SignInInner />
-    </Suspense>
   );
 }
