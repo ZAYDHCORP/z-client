@@ -1,0 +1,12 @@
+{
+  "name": ".Gate Knowledge Ecosystem",
+  "short_name": ".Gate",
+  "description": "Premium knowledge PWA for IPN, IGC, IFR and ISR.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f0e8",
+  "theme_color": "#090908",
+  "orientation": "portrait-primary",
+  "categories": ["education", "books", "news", "productivity"],
+  "icons": []
+}

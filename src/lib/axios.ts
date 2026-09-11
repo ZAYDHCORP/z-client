@@ -1,0 +1,133 @@
+import axios from "axios";
+import { PUBLIC_ENDPOINTS } from "./constants";
+import { getClientData } from "./utils";
+
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    skipAuthRedirect?: boolean;
+  }
+}
+
+export const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  timeout: 10000,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+console.log("api---",{
+  baseURL: api.defaults.baseURL,
+  withCredentials: api.defaults.withCredentials,
+});
+
+const isPublicEndpoint = (url?: string) =>
+  PUBLIC_ENDPOINTS.some((endpoint) => url?.includes(endpoint));
+
+let clientDataCache: Awaited<ReturnType<typeof getClientData>> | null = null;
+
+async function getCachedClientData() {
+  if (!clientDataCache) {
+    clientDataCache = await getClientData();
+  }
+  return clientDataCache;
+}
+
+let isRefreshing = false;
+let refreshPromise: Promise<void> | null = null;
+
+const refreshAccessToken = async () => {
+  await axios.post(
+    `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
+    {},
+    { withCredentials: true },
+  );
+};
+
+api.interceptors.request.use(
+  async (config) => {
+    config.headers = config.headers ?? {};
+
+    try {
+      const clientData = await getCachedClientData();
+
+      config.headers["X-Client-UserAgent"] = clientData.userAgent;
+
+      if (clientData.latitude && clientData.longitude) {
+        config.headers["X-Client-Latitude"] = clientData.latitude;
+        config.headers["X-Client-Longitude"] = clientData.longitude;
+      }
+    } catch (err) {
+      console.warn("Failed to attach client metadata:", err);
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
+api.interceptors.response.use(
+  (response) => response,
+
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Network error
+    if (!error.response) {
+      console.log("Error---",error)
+      return Promise.reject({
+        message: "Network error. Please check your connection.",
+      });
+    }
+
+    // Timeout
+    if (error.code === "ECONNABORTED") {
+      return Promise.reject({ message: "Request timed out." });
+    }
+
+    // Skip refresh for public endpoints
+    if (isPublicEndpoint(originalRequest?.url)) {
+      return Promise.reject(error);
+    }
+
+    // Handle expired access token
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        if (!isRefreshing) {
+          isRefreshing = true;
+          refreshPromise = refreshAccessToken();
+        }
+
+        await refreshPromise;
+
+        isRefreshing = false;
+        refreshPromise = null;
+
+        return api(originalRequest);
+            } catch (refreshError) {
+        isRefreshing = false;
+        refreshPromise = null;
+
+        if (!originalRequest?.skipAuthRedirect) {
+          window.location.href = "/signin";
+        }
+
+        return Promise.reject({
+          status: 401,
+          message: "Your session has expired. Please sign in again.",
+          sessionExpired: true,
+        });
+      }
+    }
+
+    return Promise.reject({
+      status: error.response.status,
+      message:
+        error.response.data?.message || error.message || "Something went wrong",
+      data: error.response.data,
+    });
+  },
+);
