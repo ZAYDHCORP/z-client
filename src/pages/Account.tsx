@@ -5,6 +5,7 @@ import { validatePassword } from "@/lib/validation";
 import { api } from "@/lib/axios";
 import { API } from "@/lib/constants";
 import { cacheUser, getCachedUser, logoutCurrentUser } from "@/lib/client-auth";
+import { getErrorMessage, isSessionExpired } from "@/lib/errors";
 
 type Profile = {
   id?: string;
@@ -115,12 +116,10 @@ export default function AccountPage() {
       setShowDisable2faDialog(false);
       setDisable2faPassword("");
     } catch (err: unknown) {
-      console.log("Error in disabling---",err)
-      const e = err as { message?: string; sessionExpired?: boolean };
-      if (e?.sessionExpired) {
+      if (isSessionExpired(err)) {
         setDisable2faError("Your session expired while confirming. Please re-enter your password.");
       } else {
-        setDisable2faError(e?.message ?? "Could not disable two-step verification. Check your password.");
+        setDisable2faError(getErrorMessage(err, "Could not disable two-step verification. Check your password."));
       }
     } finally {
       setDisabling2fa(false);

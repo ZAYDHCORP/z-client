@@ -4,19 +4,14 @@ import {
   User,
   BarChart3,
   BookOpen,
-  Headphones,
   Bookmark,
   Download,
   Clock,
-  Calendar,
   Search,
   Share2,
   Check,
   Edit3,
-  Sparkles,
   ShieldCheck,
-  TrendingUp,
-  Heart,
   Eye,
   Tag,
   Award,
@@ -40,18 +35,18 @@ export default function UserProfileAnalyticsModal({
   // Editable Profile States
   const [name, setName] = useState(userName);
   const [bio, setBio] = useState("Research practitioner, public affairs enthusiast, and lifelong learner exploring ethical finance, public networks, and leadership.");
-  const [interests, setInterests] = useState<string[]>(["World Policy", "Ethical Finance", "Productivity", "Theology"]);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Analytics & History States
-  const [readingHours, setReadingHours] = useState(42);
-  const [listeningHours, setListeningHours] = useState(18);
-  const [completedCount, setCompletedContent] = useState(14);
-  const [searchesCount, setSearchesCount] = useState(38);
-  const [viewsCount, setViewsCount] = useState(124);
-  const [savesCount, setSavesCount] = useState(19);
-  const [sharesCount, setSharesCount] = useState(8);
+  // Analytics & History — read-only display values until the backend exposes
+  // real usage tracking endpoints.
+  const readingHours = 42;
+  const listeningHours = 18;
+  const completedCount = 14;
+  const searchesCount = 38;
+  const viewsCount = 124;
+  const savesCount = 19;
+  const sharesCount = 8;
 
   const [followedCategories, setFollowedCategories] = useState<Record<string, boolean>>({
     "World Affairs": true,
@@ -103,10 +98,14 @@ export default function UserProfileAnalyticsModal({
                 <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   Active Gate Member
                 </span>
+                {userRole === "admin" && (
+                  <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-[#9a6d35]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9a6d35]">
+                    <ShieldCheck size={11} /> Admin
+                  </span>
+                )}
               </div>
             </div>
           </div>
-
           </div>
 
           {/* Navigation Tabs */}

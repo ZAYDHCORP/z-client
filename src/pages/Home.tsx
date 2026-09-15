@@ -1,260 +1,59 @@
 import { Logo } from "@/components/Logo";
 import {
   Activity,
-  BarChart3,
-  Bell,
   BookOpen,
-  Bookmark,
   Check,
   ChevronRight,
-  Download,
-  FileText,
-  Globe2,
   Headphones,
   HeartPulse,
   Image as ImageIcon,
-  LayoutDashboard,
   Menu,
   Moon,
   Pause,
   Play,
   Repeat,
   Search,
-  Settings,
   Share2,
   ShieldCheck,
   Shuffle,
   SkipBack,
   SkipForward,
-  Sparkles,
   Sun,
   User,
   Volume2,
-  WalletCards,
   X,
   FileCode,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { playHeartbeatSound } from "@/components/HeartbeatAudio";
-import GateReader, { BookSampleData } from "@/components/GateReader";
+import GateReader from "@/components/GateReader";
 import BookDetailModal, { BookItemData } from "@/components/BookDetailModal";
 import InfographicFocusedView, { InfographicPostData } from "@/components/InfographicFocusedView";
-import PodcastTranscriptModal, { TranscriptSegment } from "@/components/PodcastTranscriptModal";
+import PodcastTranscriptModal from "@/components/PodcastTranscriptModal";
 import UserProfileAnalyticsModal from "@/components/UserProfileAnalyticsModal";
 import ServiceLandingModal from "@/components/ServiceLandingModal";
 import { hubs, hubByKey, gateSocials, zSocials } from "@/lib/gate-data";
 import SocialLinks from "@/components/SocialLinks";
 import { Typewriter } from "@/components/TypeWriter";
-import { API } from "@/lib/constants";
 import { ClientUser, fetchCurrentUser, getCachedUser } from "@/lib/client-auth";
-
-type PlatformKey = "IPN" | "IGC" | "IFR" | "ISR";
-
-type Episode = {
-  platform: PlatformKey | "Z";
-  podcastTitle?: string;
-  creator?: string;
-  title: string;
-  description: string;
-  transcript?: TranscriptSegment[];
-  audioUrl: string;
-  image: string;
-  duration?: string;
-  episodeUrl?: string;
-  pubDate: string;
-};
-
-const platforms: Record<PlatformKey, {
-  name: string;
-  promise: string;
-  tone: string;
-  categories: string[];
-  services: string[];
-  rss: string;
-  socials: string[];
-}> = {
-  IPN: {
-    name: "International Public Network",
-    promise: "For Planet, People, Progress & Policies.",
-    tone: "from-sky-500/20 via-cyan-400/10 to-slate-950/5",
-    categories: ["World", "Politics & Governance", "Business & Economy", "Society", "Environment & Climate", "Law & Justice", "Science & Technology", "Health", "Education", "Security & Defence", "Culture & Lifestyle", "Sports"],
-    services: ["Advertising", "API Access", "Events", "Journalism Live Online/Offline Workshops", "Memberships", "Merchandise", "Public Affairs Consulting", "Research Reports"],
-    rss: "https://anchor.fm/s/1154f5ab8/podcast/rss",
-    socials: ["Website", "YouTube", "Spotify", "Apple Podcasts", "Instagram", "Facebook", "LinkedIn", "X", "WhatsApp Community", "WhatsApp Channel", "Contact"],
-  },
-  IGC: {
-    name: "Inspire Guide Connect",
-    promise: "Career, motivation, productivity and leadership growth.",
-    tone: "from-amber-400/25 via-orange-300/10 to-stone-950/5",
-    categories: ["Career Development", "Motivation", "Leadership & Growth Mindset", "Productivity & Time Management", "Business & Entrepreneurship", "Communication & Public Speaking Skills", "Environmental Sustainability"],
-    services: ["Management Consulting", "Career & Employability Live Online/Offline Workshops", "Productivity & Time Management Live Online/Offline Workshops", "Books", "Memberships", "Patrons & Donations"],
-    rss: "https://anchor.fm/s/109d1667c/podcast/rss",
-    socials: ["Website", "YouTube", "Spotify", "Apple Podcasts", "Instagram", "Facebook", "LinkedIn", "X", "Students Community", "Professionals Community", "Corporate Community", "WhatsApp Contact"],
-  },
-  IFR: {
-    name: "Integrity Finance Research",
-    promise: "Ethical finance, markets, literacy and economic research.",
-    tone: "from-emerald-500/20 via-teal-300/10 to-zinc-950/5",
-    categories: ["Ethical Finance", "Ethical Banking", "Shariah Governance", "Economics", "Indian Economy", "Global Economy", "Industry Analysis", "Company Research", "Financial Markets", "Public Policy", "Financial Literacy"],
-    services: ["Research Reports", "Books", "Memberships", "Financial Literacy Live Online/Offline Workshops", "Patrons & Donations"],
-    rss: "https://anchor.fm/s/e7ad1b40/podcast/rss",
-    socials: ["Website", "YouTube", "Spotify", "Apple Podcasts", "Instagram", "Facebook", "LinkedIn", "X", "Author Books", "Research Projects", "WhatsApp Contact"],
-  },
-  ISR: {
-    name: "Ideological Studies Research",
-    promise: "Quran, Hadith, theology, ethics and contemporary issues.",
-    tone: "from-rose-500/20 via-stone-300/10 to-black/5",
-    categories: ["Quranic Studies (6,236 Verses)", "Tafsir Ibn Kathir (6,236 Verses)", "Hadith Studies (68,061 Hadiths)", "Sahih Bukhari (7,563 Hadiths)", "Sahih Muslim (7,563 Hadiths)", "Sunan Abu Dawud (5,274 Hadiths)", "Jami at Tirmidhi (3,956 Hadiths)", "Sunan an Nasai (5,758 Hadiths)", "Sunan Ibn Majah (4,341 Hadiths)", "Al Muwatta by Imam Malik (1,861 Hadiths)", "Musnad Ahmad ibn Hanbal (28,199 Hadiths)", "Sunan ad Darimi (3,546 Hadiths)", "Creed and Theology", "Theological Jurisprudence", "Theological History", "Theological Ethics", "Science and Theology", "Feminism and Theology", "Terrorism and Theology", "Relationships and Theology", "Prophetic and Companion Biographies", "Contemporary Theological Issues"],
-    services: ["Research Reports", "Books", "Memberships", "Theological Live Online/Offline Workshops", "Patrons and Donations"],
-    rss: "https://anchor.fm/s/f49f1ccc/podcast/rss",
-    socials: ["Website", "YouTube", "Spotify", "Apple Podcasts", "Instagram", "Facebook", "LinkedIn", "X", "Microsoft Teams", "WhatsApp Contact"],
-  },
-};
-
-const plans = [
-  ["Monthly", "₹99", "Flexible", "Just ₹3.30/day."],
-  ["1 Year", "₹799", "Popular", "Only ₹66.58/month. Recommended for regular learners."],
-  ["3 Years", "₹2,199", "Value", "Just ₹61.08/month for uninterrupted access."],
-  ["5 Years", "₹3,499", "Savings", "Only ₹58.32/month with long-term savings."],
-  ["7 Years", "₹4,699", "Commitment", "Just ₹55.94/month for committed members."],
-  ["9 Years", "₹5,799", "Legacy", "Only ₹53.69/month, best long-term value."],
-];
-
-const nav = ["Home", "Services", "Gate Feed", "Search", "Membership", "Dashboard", "Z Web App"];
-const contentTypes = ["All", "Books", "Infographics", "Podcasts", "Research Reports"];
-
-const sampleBooks: BookItemData[] = [
-  {
-    id: "b1",
-    type: "Books",
-    platform: "IPN",
-    title: "World Policy & Ethical Governance Handbook",
-    subtitle: "Frameworks for Modern Public Affairs and Sustainable Progress",
-    author: "Dr. Zayd Haji",
-    description: "A landmark treatise detailing connected frameworks for international diplomacy, law, public policy, and ecological responsibility across interconnected global networks.",
-    category: "World",
-    tags: ["World", "Global", "Politics"],
-    freeSampleEnabled: true,
-    purchaseLinks: {
-      amazonEnabled: true,
-      amazonUrl: "https://amazon.com",
-      notionPressEnabled: true,
-      notionPressUrl: "https://notionpress.com",
-      googlePlayEnabled: true,
-      googlePlayUrl: "https://play.google.com/store/books",
-    },
-  },
-  {
-    id: "b2",
-    type: "Books",
-    platform: "IGC",
-    title: "Global Productivity & Mindset Playbook",
-    subtitle: "Navigating Time, Leadership and Career Growth",
-    author: "Dr. Zayd Haji",
-    description: "Essential strategies for cultivating personal resilience, effective communication, time mastery, and visionary leadership in modern corporate and entrepreneurial environments.",
-    category: "Productivity & Time Management",
-    tags: ["Productivity", "Leadership", "Career"],
-    freeSampleEnabled: true,
-    purchaseLinks: {
-      amazonEnabled: true,
-      amazonUrl: "https://amazon.com",
-      googlePlayEnabled: true,
-      googlePlayUrl: "https://play.google.com/store/books",
-    },
-  },
-  {
-    id: "b3",
-    type: "Research Reports",
-    platform: "IFR",
-    title: "World Economy & Ethical Finance Outlook",
-    subtitle: "Macroeconomic Analysis, Banking Governance & Shariah Policy",
-    author: "Dr. Zayd Haji",
-    description: "In-depth economic research examining ethical financial systems, public market trends, banking governance, and sustainable investment frameworks across global markets.",
-    category: "Global Economy",
-    tags: ["Finance", "Economy", "Markets"],
-    freeSampleEnabled: true,
-    purchaseLinks: {
-      googlePlayEnabled: true,
-      googlePlayUrl: "https://play.google.com/store/books",
-    },
-  },
-];
-
-const sampleInfographics: InfographicPostData[] = [
-  {
-    id: "info-1",
-    platform: "IPN",
-    title: "Global Public Policy & Environmental Architecture",
-    caption: "A comprehensive 4:5 visual guide breaking down international policy frameworks, ecological targets, law reform, and multi-lateral public networks across 12 strategic global sectors.\n\nKey Highlights:\n• Connected governance frameworks\n• Sustainable economic transitions\n• Environmental protection compliance\n• Multi-stakeholder diplomacy roadmaps",
-    imageUrl: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=80",
-    category: "Environment & Climate",
-    tags: ["World", "Climate", "Policy"],
-    views: 2840,
-    publishedAt: "Today",
-  },
-  {
-    id: "info-2",
-    platform: "IGC",
-    title: "The 7 Pillars of Modern Leadership & Productivity",
-    caption: "Transform your daily workflow with these proven time management techniques, growth mindset principles, and effective communication frameworks designed for leaders and emerging professionals.",
-    imageUrl: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80",
-    category: "Career Development",
-    tags: ["Productivity", "Leadership", "Career"],
-    views: 1950,
-    publishedAt: "2 days ago",
-  },
-];
-
-const contentLibrary = [
-  { platform: "IPN", type: "Books", title: "World Policy Handbook", category: "World", tags: ["World", "Global", "Politics"], description: "A premium IPN book entry connected to global public affairs." },
-  { platform: "IPN", type: "Research Reports", title: "Climate, Society and Progress", category: "Environment & Climate", tags: ["Climate", "Policy", "Global"], description: "IPN research on climate policy, society and governance." },
-  { platform: "IPN", type: "Infographics", title: "World Governance Map", category: "Politics & Governance", tags: ["Governance", "United Nations", "Public Affairs"], description: "IPN visual guide for global governance systems." },
-  { platform: "IGC", type: "Books", title: "Global Productivity Playbook", category: "Productivity & Time Management", tags: ["Productivity", "Time Management", "Leadership"], description: "IGC productivity book connected to skills, work and career development." },
-  { platform: "IGC", type: "Infographics", title: "Career Growth Ladder", category: "Career Development", tags: ["Career", "Employability", "Growth Mindset"], description: "IGC career development visual guide for students and professionals." },
-  { platform: "IGC", type: "Podcasts", title: "Leadership Mindset Briefing", category: "Leadership & Growth Mindset", tags: ["Leadership", "Motivation", "Communication"], description: "IGC podcast for leadership, communication and motivation." },
-  { platform: "IFR", type: "Books", title: "World Economy and Ethical Finance", category: "Global Economy", tags: ["Finance", "Economy", "Markets"], description: "IFR book on ethical finance and the global economy." },
-  { platform: "IFR", type: "Research Reports", title: "Ethical Banking Outlook", category: "Ethical Banking", tags: ["Ethical Banking", "Shariah Governance", "Financial Literacy"], description: "IFR research report on banking governance and literacy." },
-  { platform: "IFR", type: "Podcasts", title: "Global Markets Briefing", category: "Financial Markets", tags: ["Financial Markets", "Company Research", "Public Policy"], description: "IFR podcast indexed by markets, policy and research tags." },
-  { platform: "ISR", type: "Books", title: "Theology in a Connected World", category: "Contemporary Theological Issues", tags: ["Theology", "Society", "Ethics"], description: "ISR book on theology, society and contemporary discourse." },
-  { platform: "ISR", type: "Research Reports", title: "Hadith Studies Reference Guide", category: "Hadith Studies (68,061 Hadiths)", tags: ["Hadith", "Sahih Bukhari", "Sahih Muslim"], description: "ISR research guide for Hadith studies and classical sources." },
-  { platform: "ISR", type: "Infographics", title: "Quranic Studies Pathway", category: "Quranic Studies (6,236 Verses)", tags: ["Quran", "Tafsir", "Theology"], description: "ISR infographic pathway for Quranic studies and Tafsir." },
-] as const;
-
-const hubTags: Record<PlatformKey, string[]> = {
-  IPN: ["World", "Global", "Politics", "Governance", "Climate", "Policy", "United Nations", "Public Affairs", "Society", "Environment", "Security", "Culture"],
-  IGC: ["Career", "Employability", "Motivation", "Leadership", "Growth Mindset", "Productivity", "Time Management", "Entrepreneurship", "Communication", "Public Speaking", "Sustainability"],
-  IFR: ["Finance", "Economy", "Markets", "Ethical Banking", "Shariah Governance", "Financial Literacy", "Company Research", "Public Policy", "Industry Analysis", "Ethical Finance"],
-  ISR: ["Quran", "Tafsir", "Hadith", "Sahih Bukhari", "Sahih Muslim", "Theology", "Ethics", "Creed", "Jurisprudence", "Prophetic Biography", "Contemporary Issues"],
-};
-
-
-function PlatformLogo({ id }: { id: PlatformKey | "Z" }) {
-  if (id === "Z") {
-    return (
-      <div className="flex items-center gap-4">
-        <img src="/z-logo.png" alt="Z | ZAYDH logo" className="h-20 w-20 rounded-2xl object-contain mix-blend-multiply dark:mix-blend-screen" />
-        <div>
-          <span className="block text-3xl font-black tracking-tight text-zinc-950 dark:text-white">Z</span>
-          <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-300">ZAYDH Productivity & Automation</span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-end gap-2">
-      <span className="font-serif text-5xl font-black tracking-tight text-zinc-950 dark:text-white">{id}</span>
-      <span className="mb-1 flex items-center gap-1 font-serif text-xl font-bold"><span className="size-2 rounded-full bg-current" />Gate</span>
-    </div>
-  );
-}
+import {
+  PlatformKey,
+  platforms,
+  nav,
+  contentTypes,
+  sampleBooks,
+  sampleInfographics,
+  contentLibrary,
+  hubTags,
+} from "@/lib/home-data";
+import { PlatformLogo } from "@/components/home/PlatformLogo";
+import { SectionTitle, FeedCard, Metric } from "@/components/home/HomeBits";
+import { usePodcastPlayer, formatTime } from "@/hooks/usePodcastPlayer";
 
 export default function Home() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [active, setActive] = useState<PlatformKey>("IPN");
-  const [episodes, setEpisodes] = useState<Episode[]>([]);
-  const [playing, setPlaying] = useState(false);
   const [user, setUser] = useState<ClientUser | null>(() => getCachedUser());
   const navigate = useNavigate();
   const signedIn = Boolean(user?.email);
@@ -267,14 +66,6 @@ export default function Home() {
   const [selectedType, setSelectedType] = useState("Books");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedTag, setSelectedTag] = useState("All");
-  const [currentEpisode, setCurrentEpisode] = useState<Episode | null>(null);
-  const [playerOpen, setPlayerOpen] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [speed, setSpeed] = useState(1);
-  const [repeat, setRepeat] = useState(false);
-  const [shuffle, setShuffle] = useState(false);
 
   // New Modals
   const [selectedBookModal, setSelectedBookModal] = useState<BookItemData | null>(null);
@@ -284,9 +75,37 @@ export default function Home() {
   const [userProfileModalOpen, setUserProfileModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<{ hub: (typeof hubs)[number]; service: (typeof hubs)[number]["services"][number] } | null>(null);
 
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const featured = useMemo(() => episodes.find((item) => item.platform === active) ?? episodes[0], [active, episodes]);
-  const nowPlaying = currentEpisode ?? featured;
+  const openAuth = (mode: "sign-in" | "sign-up" | "forgot" = "sign-in") => {
+    const page =
+      mode === "sign-up" ? "/signup" : mode === "forgot" ? "/forgot-password" : "/signin";
+    navigate(page);
+  };
+
+  const {
+    episodes,
+    nowPlaying,
+    playing,
+    playerOpen,
+    setPlayerOpen,
+    progress,
+    duration,
+    volume,
+    setVolume,
+    speed,
+    setSpeed,
+    repeat,
+    setRepeat,
+    shuffle,
+    setShuffle,
+    audioRef,
+    toggleAudio,
+    openEpisode,
+    skipBy,
+    seekTo,
+    updateProgress,
+    nextEpisode,
+  } = usePodcastPlayer({ active, signedIn, onRequireAuth: () => openAuth("sign-in") });
+
   const activeHubTags = hubTags[active];
   const filteredContent = useMemo(() => contentLibrary.filter((item) => {
     const hubMatch = item.platform === active;
@@ -307,53 +126,10 @@ export default function Home() {
   }, [active]);
 
   useEffect(() => {
-    fetch(API.PODCASTS, { credentials: "include" })
-      .then((res) => res.json())
-      .then((data: { episodes?: Episode[] }) => setEpisodes(data.episodes ?? []))
-      .catch(() => setEpisodes([]));
-  }, []);
-
-  useEffect(() => {
     fetchCurrentUser()
       .then(setUser)
       .catch(() => setUser(getCachedUser()));
   }, []);
-
-  useEffect(() => {
-    if (!audioRef.current) return;
-    audioRef.current.volume = volume;
-    audioRef.current.playbackRate = speed;
-    audioRef.current.loop = repeat;
-  }, [volume, speed, repeat]);
-
-  useEffect(() => {
-    if (!nowPlaying || !("mediaSession" in navigator)) return;
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: nowPlaying.title,
-      artist: nowPlaying.creator || nowPlaying.platform,
-      album: nowPlaying.podcastTitle || `${nowPlaying.platform} Podcast`,
-      artwork: nowPlaying.image ? [{ src: nowPlaying.image, sizes: "512x512", type: "image/png" }] : [],
-    });
-    navigator.mediaSession.setActionHandler("play", () => void audioRef.current?.play());
-    navigator.mediaSession.setActionHandler("pause", () => audioRef.current?.pause());
-    navigator.mediaSession.setActionHandler("seekbackward", () => skipBy(-30));
-    navigator.mediaSession.setActionHandler("seekforward", () => skipBy(10));
-  }, [nowPlaying]);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (!playerOpen) return;
-      if (event.code === "Space") {
-        event.preventDefault();
-        void toggleAudio();
-      }
-      if (event.key === "ArrowLeft") skipBy(-10);
-      if (event.key === "ArrowRight") skipBy(10);
-      if (event.key === "Escape") setPlayerOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
 
   // Synchronized Heartbeat Sound & Logo Reveal on every page load/refresh
   useEffect(() => {
@@ -371,65 +147,6 @@ export default function Home() {
       window.removeEventListener("keydown", triggerHeartbeat);
     };
   }, []);
-
-  const toggleAudio = async () => {
-    if (!audioRef.current || !nowPlaying?.audioUrl) return;
-    if (playing) {
-      audioRef.current.pause();
-      setPlaying(false);
-      return;
-    }
-    await audioRef.current.play();
-    setPlaying(true);
-  };
-
-  const openEpisode = async (episode: Episode) => {
-    if (!signedIn) {
-      openAuth("sign-in");
-      return;
-    }
-    setCurrentEpisode(episode);
-    setPlayerOpen(true);
-    setPlaying(false);
-    window.setTimeout(() => void audioRef.current?.play().then(() => setPlaying(true)).catch(() => setPlaying(false)), 80);
-  };
-
-  const skipBy = (seconds: number) => {
-    if (!audioRef.current) return;
-    audioRef.current.currentTime = Math.max(0, Math.min(audioRef.current.duration || 0, audioRef.current.currentTime + seconds));
-  };
-
-  const seekTo = (value: number) => {
-    if (!audioRef.current) return;
-    audioRef.current.currentTime = value;
-    setProgress(value);
-  };
-
-  const updateProgress = () => {
-    if (!audioRef.current) return;
-    setProgress(audioRef.current.currentTime || 0);
-    setDuration(audioRef.current.duration || 0);
-  };
-
-  const nextEpisode = () => {
-    if (!nowPlaying || episodes.length === 0) return;
-    const next = shuffle ? episodes[Math.floor(Math.random() * episodes.length)] : episodes[(episodes.findIndex((episode) => episode.audioUrl === nowPlaying.audioUrl) + 1) % episodes.length];
-    setCurrentEpisode(next);
-    window.setTimeout(() => void audioRef.current?.play().then(() => setPlaying(true)), 80);
-  };
-
-  const formatTime = (seconds: number) => {
-    if (!Number.isFinite(seconds)) return "0:00";
-    const minutes = Math.floor(seconds / 60);
-    const rest = Math.floor(seconds % 60).toString().padStart(2, "0");
-    return `${minutes}:${rest}`;
-  };
-
-  const openAuth = (mode: "sign-in" | "sign-up" | "forgot" = "sign-in") => {
-    const page =
-      mode === "sign-up" ? "/signup" : mode === "forgot" ? "/forgot-password" : "/signin";
-    navigate(page);
-  };
 
   // Show the welcome banner the first time a real session is established
   const welcomeShown = useRef(false);
@@ -456,7 +173,7 @@ export default function Home() {
             <SocialLinks links={gateSocials} className="hidden lg:flex" />
             <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="rounded-full border border-black/10 bg-white/70 p-3 dark:border-white/10 dark:bg-white/10" aria-label="Toggle theme">{theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}</button>
 <button onClick={() => openAuth("sign-in")} className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white dark:bg-white dark:text-black">Sign In</button>
-            
+
             {/* Functional 3-Bar Menu Icon that opens Spotify-style User Profile & Growth Analytics */}
             <button
               onClick={() => setUserProfileModalOpen(true)}
@@ -474,7 +191,7 @@ export default function Home() {
         <div className="flex flex-col justify-center">
           <div className="mb-8 inline-flex w-fit items-center gap-2 rounded-full border border-black/10 bg-white/65 px-4 py-2 text-lg font-bold dark:border-white/10 dark:bg-white/10"><Typewriter words={[
               " Gate. Learn. Discover. Grow.",
-              
+
             ]}/></div>
           <div className="mb-6"><Logo /></div>
           <h1 className="max-w-4xl text-5xl font-semibold leading-[.95] tracking-[-0.05em] md:text-7xl">One premium knowledge ecosystem for IPN, IGC, IFR and ISR.</h1>
@@ -788,7 +505,7 @@ export default function Home() {
               <p className="text-sm uppercase tracking-[0.25em] text-white/50">Now Playing</p>
               <h3 className="mt-3 text-3xl font-semibold md:text-5xl">{nowPlaying?.title ?? "Loading live RSS episode"}</h3>
               <p className="mt-4 line-clamp-3 whitespace-pre-line text-left leading-7 text-white/65">{nowPlaying?.description ?? "RSS sync is loading the latest IPN, IGC, IFR and ISR episodes."}</p>
-              <audio ref={audioRef} src={nowPlaying?.audioUrl} onTimeUpdate={updateProgress} onLoadedMetadata={updateProgress} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); if (!repeat) nextEpisode(); }} preload="metadata" />
+              <audio ref={audioRef} src={nowPlaying?.audioUrl} onTimeUpdate={updateProgress} onLoadedMetadata={updateProgress} onEnded={() => { if (!repeat) nextEpisode(); }} preload="metadata" />
               <div className="mt-6 flex items-center gap-3 text-sm text-white/60"><span>{formatTime(progress)}</span><input aria-label="Seek podcast" type="range" min="0" max={duration || 0} value={progress} onChange={(event) => seekTo(Number(event.target.value))} className="w-full accent-white" /><span>{formatTime(duration)}</span></div>
               <div className="mt-6 flex flex-wrap items-center gap-3"><button onClick={toggleAudio} className="grid size-16 place-items-center rounded-full bg-white text-black" aria-label="Play podcast">{playing ? <Pause /> : <Play />}</button><button onClick={() => skipBy(-30)} className="rounded-full bg-white/10 px-4 py-3 text-sm font-semibold">-30</button><button onClick={() => skipBy(10)} className="rounded-full bg-white/10 px-4 py-3 text-sm font-semibold">+10</button><button onClick={() => setSpeed(speed === 2 ? 1 : speed + 0.25)} className="rounded-full bg-white/10 px-4 py-3 text-sm font-semibold">{speed}x</button><button onClick={() => setTranscriptOpen(true)} className="rounded-full bg-[#9a6d35] text-white px-5 py-3 text-sm font-bold flex items-center gap-2"><FileCode size={16} /> Transcript</button><button onClick={() => setPlayerOpen(true)} className="rounded-full bg-white/10 px-4 py-3 text-sm font-semibold">Open Full Player</button></div>
             </div>
@@ -940,16 +657,4 @@ export default function Home() {
       {showWelcome && <div className="fixed right-4 top-24 z-[70] flex items-center gap-3 rounded-3xl border border-black/10 bg-white/95 p-4 shadow-2xl shadow-black/15 animate-in fade-in slide-in-from-top-3 dark:border-white/10 dark:bg-zinc-950/95"><Logo compact /><span className="font-semibold">Greetings, {userName}</span></div>}
     </main>
   );
-}
-
-function SectionTitle({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
-  return <div><p className="text-sm font-bold uppercase tracking-[0.25em] text-[#9a6d35]">{eyebrow}</p><h2 className="mt-3 max-w-4xl text-4xl font-semibold tracking-[-0.04em] md:text-6xl">{title}</h2><p className="mt-4 max-w-3xl text-lg leading-8 text-zinc-700 dark:text-zinc-300">{text}</p></div>;
-}
-
-function FeedCard({ number, icon, title, text, onClick }: { number: string; icon: React.ReactNode; title: string; text: string; onClick?: () => void }) {
-  return <article onClick={onClick} className="relative rounded-[2rem] border border-black/10 bg-white/70 p-6 dark:border-white/10 dark:bg-black/25 cursor-pointer hover:shadow-xl transition"><span className="absolute right-5 top-5 rounded-full bg-zinc-950 px-3 py-1 text-xs font-bold text-white dark:bg-white dark:text-black">{number}</span><div className="text-[#9a6d35]">{icon}</div><h3 className="mt-8 text-2xl font-semibold">{title}</h3><p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{text}</p><div className="mt-5 flex gap-3 text-sm"><span className="flex items-center gap-1"><BarChart3 size={16} /> View Count</span><span>Share</span><span className="flex items-center gap-1"><Bookmark size={16} /> Bookmark</span></div></article>;
-}
-
-function Metric({ title, value, icon }: { title: string; value: string; icon: React.ReactNode }) {
-  return <div className="rounded-[2rem] border border-black/10 bg-white/65 p-6 dark:border-white/10 dark:bg-white/5"><div className="text-[#9a6d35]">{icon}</div><p className="mt-8 text-sm text-zinc-500">{title}</p><p className="mt-2 text-4xl font-bold tracking-tight">{value}</p></div>;
 }

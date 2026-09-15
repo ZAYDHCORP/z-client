@@ -6,15 +6,11 @@ import {
   ZoomIn,
   ZoomOut,
   Search as SearchIcon,
-  BookOpen,
   Bookmark,
   BookmarkCheck,
   Maximize2,
   Minimize2,
   List,
-  Sun,
-  Moon,
-  Type,
 } from "lucide-react";
 
 export type BookSampleData = {

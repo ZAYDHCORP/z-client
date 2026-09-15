@@ -5,7 +5,6 @@ import {
   Bookmark,
   BookmarkCheck,
   Eye,
-  Maximize2,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -31,7 +30,7 @@ export default function InfographicFocusedView({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
-  const [viewCount, setViewCount] = useState(post.views || 1240);
+  const viewCount = post.views || 1240;
 
   const handleShare = () => {
     if (navigator.share) {

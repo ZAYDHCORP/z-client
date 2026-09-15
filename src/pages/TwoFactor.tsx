@@ -4,7 +4,8 @@ import AuthScreen from "@/components/auth/AuthScreen";
 import { Loader2, ShieldCheck, CheckCircle2, XCircle } from "lucide-react";
 import { api } from "@/lib/axios";
 import { API } from "@/lib/constants";
-import { cachePendingTwoFactorToken, cacheUser, getPendingTwoFactorToken } from "@/lib/client-auth";
+import { cachePendingTwoFactorToken, cacheUser, getPendingTwoFactorToken, getPostLoginPath, parseUserResponse } from "@/lib/client-auth";
+import { getErrorMessage } from "@/lib/errors";
 
 const CODE_LENGTH = 6;
 
@@ -75,50 +76,6 @@ export default function TwoFactorPage() {
     if (e.key === "ArrowRight" && index < CODE_LENGTH - 1) inputRefs.current[index + 1]?.focus();
   };
 
-//  const verify = async () => {
-//     setError(null);
-//     setLoading(true);
-
-//     try {
-//       const payload =
-//         mode === "totp"
-//           ? { email, code: totpCode, pendingToken }
-//           : { email, backupCode: backupCode.trim(), pendingToken };
-
-//       const res = await api.post(API.AUTH.VERIFY_LOGIN_2FA, payload);
-//       const data = res.data?.data ?? res.data;
-
-//       if (data?.user) cacheUser(data.user);
-//       else if (email) cacheUser({ email, name: email.split("@")[0], role: "user", membership: "free" });
-
-//       cachePendingTwoFactorToken(null);
-//       setStatus("success");
-
-//       // Let the success animation breathe before navigating away
-//       setTimeout(() => {
-//         router.push("/account");
-//         router.refresh();
-//       }, 1100);
-//     } catch (err: unknown) {
-//       const e = err as { message?: string };
-//       setError(e?.message ?? "That code didn't work. Please try again.");
-//       setStatus("error");
-
-//       // Show the rejection state briefly, then reset for another attempt
-//       setTimeout(() => {
-//         setStatus("idle");
-//         if (mode === "totp") {
-//           setDigits(Array(CODE_LENGTH).fill(""));
-//           inputRefs.current[0]?.focus();
-//         } else {
-//           setBackupCode("");
-//           backupRef.current?.focus();
-//         }
-//       }, 1500);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
   const verify = async () => {
     setError(null);
     setLoading(true);
@@ -132,18 +89,22 @@ export default function TwoFactorPage() {
       const res = await api.post(API.AUTH.VERIFY_LOGIN_2FA, payload);
       const data = res.data?.data ?? res.data;
 
-      if (data?.user) cacheUser({ ...data.user, twoFactorEnabled: true });
-      else if (email) cacheUser({ email, name: email.split("@")[0], role: "user", membership: "free", twoFactorEnabled: true });
+      const parsedUser = parseUserResponse(data);
+      const loggedInUser = parsedUser
+        ? { ...parsedUser, twoFactorEnabled: true }
+        : email
+          ? { email, name: email.split("@")[0], role: "user", membership: "free", twoFactorEnabled: true }
+          : null;
+      if (loggedInUser) cacheUser(loggedInUser);
 
       cachePendingTwoFactorToken(null);
       setStatus("success");
 
       setTimeout(() => {
-        navigate("/account");
+        navigate(getPostLoginPath(loggedInUser));
       }, 1100);
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e?.message ?? "That code didn't work. Please try again.");
+      setError(getErrorMessage(err, "That code didn't work. Please try again."));
       setStatus("error");
 
       setTimeout(() => {

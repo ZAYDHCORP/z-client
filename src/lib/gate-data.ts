@@ -15,7 +15,6 @@ import {
   Podcast,
   Presentation,
   ShoppingBag,
-  Sparkles,
   Timer,
   Users,
   Wallet,

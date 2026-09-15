@@ -4,9 +4,6 @@ import {
   BookOpen,
   ShoppingBag,
   ExternalLink,
-  Share2,
-  Bookmark,
-  Check,
   Star,
 } from "lucide-react";
 import { hubByKey } from "@/lib/gate-data";

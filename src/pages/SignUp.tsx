@@ -6,7 +6,8 @@ import { Loader2 } from "lucide-react";
 import { api } from "@/lib/axios";
 import { API } from "@/lib/constants";
 import { getPasswordStrength } from "@/lib/password-strength";
-import { cachePendingTwoFactorToken, cacheUser } from "@/lib/client-auth";
+import { cachePendingTwoFactorToken, cacheUser, getPostLoginPath, parseUserResponse } from "@/lib/client-auth";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -55,12 +56,13 @@ export default function SignUpPage() {
         );
         return;
       }
-      if (data?.user) cacheUser(data.user);
-      else cacheUser({ email, name: `${firstName} ${lastName}`.trim(), role: "user", membership: "free" });
+      const registeredUser =
+        parseUserResponse(data) ?? { email, name: `${firstName} ${lastName}`.trim(), role: "user", membership: "free" };
+      cacheUser(registeredUser);
       cachePendingTwoFactorToken(null);
-      navigate("/account");
-    } catch (err: any) {
-      setError(err?.message ?? "Could not create account. Please try again.");
+      navigate(getPostLoginPath(registeredUser));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Could not create account. Please try again."));
     } finally {
       setLoading(false);
     }

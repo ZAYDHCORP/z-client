@@ -4,6 +4,7 @@ import AuthScreen from "@/components/auth/AuthScreen";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { api } from "@/lib/axios";
 import { API } from "@/lib/constants";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -18,8 +19,8 @@ export default function ForgotPasswordPage() {
     try {
       await api.post(API.AUTH.FORGOT_PASS, { email });
       setDone(true);
-    } catch (err: any) {
-      setError(err?.message ?? "Request failed. Please try again.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Request failed. Please try again."));
     } finally {
       setLoading(false);
     }

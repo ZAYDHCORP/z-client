@@ -1,10 +1,11 @@
-import axios from "axios";
+import axios, { type AxiosError } from "axios";
 import { PUBLIC_ENDPOINTS } from "./constants";
 import { getClientData } from "./utils";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
     skipAuthRedirect?: boolean;
+    _retry?: boolean;
   }
 }
 
@@ -15,11 +16,6 @@ export const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-});
-
-console.log("api---",{
-  baseURL: api.defaults.baseURL,
-  withCredentials: api.defaults.withCredentials,
 });
 
 const isPublicEndpoint = (url?: string) =>
@@ -70,12 +66,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
 
-  async (error) => {
+  async (error: AxiosError<{ message?: string }>) => {
     const originalRequest = error.config;
 
     // Network error
     if (!error.response) {
-      console.log("Error---",error)
       return Promise.reject({
         message: "Network error. Please check your connection.",
       });
@@ -92,7 +87,7 @@ api.interceptors.response.use(
     }
 
     // Handle expired access token
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
@@ -107,11 +102,11 @@ api.interceptors.response.use(
         refreshPromise = null;
 
         return api(originalRequest);
-            } catch (refreshError) {
+      } catch {
         isRefreshing = false;
         refreshPromise = null;
 
-        if (!originalRequest?.skipAuthRedirect) {
+        if (!originalRequest.skipAuthRedirect) {
           window.location.href = "/signin";
         }
 

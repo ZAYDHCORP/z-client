@@ -5,7 +5,8 @@ import { OAuthButtons } from "@/components/auth/OAuthButtons";
 import { Loader2 } from "lucide-react";
 import { api } from "@/lib/axios";
 import { API } from "@/lib/constants";
-import { cachePendingTwoFactorToken, cacheUser } from "@/lib/client-auth";
+import { cachePendingTwoFactorToken, cacheUser, getPostLoginPath, parseUserResponse } from "@/lib/client-auth";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function SignInPage() {
   const navigate = useNavigate();
@@ -36,7 +37,6 @@ export default function SignInPage() {
       const data = res.data;
       const authData = data?.data ?? data;
       const pendingToken = authData?.pendingToken;
-      console.log("DATA AFTER LOGIN---",data)
 
       if (typeof pendingToken === "string") {
         cachePendingTwoFactorToken(pendingToken);
@@ -56,14 +56,15 @@ export default function SignInPage() {
         return;
       }
 
-      if (authData?.user) cacheUser(authData.user);
-      else cacheUser({ email, name: email.split("@")[0], role: "user", membership: "free" });
+      const loggedInUser =
+        parseUserResponse(authData) ?? { email, name: email.split("@")[0], role: "user", membership: "free" };
+      cacheUser(loggedInUser);
       cachePendingTwoFactorToken(null);
 
-      const callbackUrl = searchParams.get("callbackUrl") ?? "/account";
-      navigate(callbackUrl);
-    } catch (err: any) {
-      setError(err?.message ?? "Invalid email or password. Please try again.");
+      const callbackUrl = searchParams.get("callbackUrl");
+      navigate(callbackUrl ?? getPostLoginPath(loggedInUser));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Invalid email or password. Please try again."));
     } finally {
       setLoading(false);
     }

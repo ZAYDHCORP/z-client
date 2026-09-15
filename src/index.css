@@ -153,28 +153,48 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4em;
+  gap: 0.25em;
   position: relative;
   vertical-align: middle;
   line-height: 1;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
-/* Prominent Focus Circle (Dot) - Scaled to 1.55em to match diameter of lowercase 'a' font size */
+/* Brand mark — the real .Gate logo icon */
 .gate-dot {
   display: inline-block;
-  width: 1.55em;
-  height: 1.55em;
-  border-radius: 999px;
-  background: currentColor;
+  width: 2.2em;
+  height: 2.2em;
+  background-image: url("/gate-icon.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   flex-shrink: 0;
   transform-origin: center;
   align-self: center;
-  margin-top: 0.04em; /* Fine-tuned so the dot's exact center sits on the visual center of "Gate" */
+}
+
+/* Larger icon to pair with the full (non-compact) wordmark size */
+.gate-dot-lg {
+  width: 3.4em;
+  height: 3.4em;
+}
+
+/* The icon is dark ink on transparent — invert it to read on dark surfaces */
+.dark .gate-dot,
+.gate-dot-invert {
+  filter: invert(1);
 }
 
 /* Premium Heartbeat Animation (subtle expand & contract pulse) */
 .heartbeat {
   animation: gate-heartbeat 1.42s ease-in-out infinite;
+}
+
+.dark .heartbeat,
+.gate-dot-invert.heartbeat {
+  animation-name: gate-heartbeat-dark;
 }
 
 @keyframes gate-heartbeat {
@@ -189,6 +209,21 @@ body {
   42% {
     transform: scale(1.1);
     filter: drop-shadow(0 0 10px rgba(154, 109, 53, 0.3));
+  }
+}
+
+@keyframes gate-heartbeat-dark {
+  0%, 28%, 70%, 100% {
+    transform: scale(1);
+    filter: invert(1) drop-shadow(0 0 0 rgba(154, 109, 53, 0));
+  }
+  12% {
+    transform: scale(1.22);
+    filter: invert(1) drop-shadow(0 0 20px rgba(154, 109, 53, 0.5));
+  }
+  42% {
+    transform: scale(1.1);
+    filter: invert(1) drop-shadow(0 0 10px rgba(154, 109, 53, 0.3));
   }
 }
 

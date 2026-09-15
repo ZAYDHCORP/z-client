@@ -1,9 +1,8 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import Providers from "@/components/Providers";
 import Home from "@/pages/Home";
 import Account from "@/pages/Account";
-import Admin from "@/pages/Admin";
-import AdminLogin from "@/pages/AdminLogin";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import SignIn from "@/pages/SignIn";
@@ -13,14 +12,22 @@ import TwoFactorSetup from "@/pages/TwoFactorSetup";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
 
+const AdminRoutes = lazy(() => import("@/pages/admin/AdminRoutes"));
+
 export default function App() {
   return (
     <Providers>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/account" element={<Account />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route
+          path="/admin/*"
+          element={
+            <Suspense fallback={<div className="min-h-screen bg-background" />}>
+              <AdminRoutes />
+            </Suspense>
+          }
+        />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/signin" element={<SignIn />} />

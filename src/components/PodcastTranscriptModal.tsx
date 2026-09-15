@@ -61,6 +61,9 @@ export default function PodcastTranscriptModal({
               <h3 className="text-lg font-bold leading-snug line-clamp-1">
                 {title}
               </h3>
+              {creator && (
+                <p className="text-xs text-white/50">{creator}</p>
+              )}
             </div>
           </div>
           <button

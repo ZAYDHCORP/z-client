@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { API } from "@/lib/constants";
 import { api } from "@/lib/axios";
-import { cachePendingTwoFactorToken, cacheUser, getCachedUser, getPendingTwoFactorToken } from "@/lib/client-auth";
+import { cachePendingTwoFactorToken, cacheUser, getCachedUser, getPendingTwoFactorToken, getPostLoginPath, parseUserResponse } from "@/lib/client-auth";
+import { getErrorMessage } from "@/lib/errors";
 import { CheckCircle2, Copy, Loader2, ShieldCheck } from "lucide-react";
 
 type SetupResponse = {
@@ -12,9 +13,8 @@ type SetupResponse = {
 };
 
 type VerifyResponse = {
-  user?: Record<string, unknown>;
   backupCodes?: string[];
-};
+} & Record<string, unknown>;
 
 export default function TwoFactorSetupPage() {
   const navigate = useNavigate();
@@ -39,109 +39,63 @@ export default function TwoFactorSetupPage() {
       .post(API.AUTH.SETUP_2FA, body)
       .then((res) => setSetup(res.data?.data ?? res.data))
       .catch((err: unknown) => {
-        const e = err as { message?: string };
-        setError(e?.message ?? "Could not start two-step verification setup.");
+        setError(getErrorMessage(err, "Could not start two-step verification setup."));
       })
       .finally(() => setLoading(false));
   }, [pendingToken]);
 
-  // const submit = async (event: React.FormEvent) => {
-  //   event.preventDefault();
-  //   if (code.length !== 6) return;
+  const submit = async (verificationCode: string) => {
+    if (verificationCode.length !== 6 || verifying) return;
 
-  //   setError(null);
-  //   setVerifying(true);
-  //   try {
-  //     const res = await api.post(API.AUTH.VERIFY_SETUP_2FA, {
-  //       code,
-  //       ...(pendingToken ? { pendingToken } : {}),
-  //     });
-  //     const data: VerifyResponse = res.data?.data ?? res.data;
+    setError(null);
+    setVerifying(true);
 
-  //     if (data?.user) {
-  //       cacheUser({ ...(data.user as object), twoFactorEnabled: true } as Parameters<typeof cacheUser>[0]);
-  //     } else {
-  //       // Settings-flow case: no email in the URL, no user in the response
-  //       // (backend already knows who you are via cookie). Merge onto the
-  //       // existing cached user instead of silently dropping the update.
-  //       const existing = getCachedUser();
-  //       if (existing) {
-  //         cacheUser({ ...existing, twoFactorEnabled: true });
-  //       } else if (email) {
-  //         cacheUser({ email, name: email.split("@")[0], role: "user", membership: "free", twoFactorEnabled: true });
-  //       }
-  //     }
+    try {
+      const res = await api.post(API.AUTH.VERIFY_SETUP_2FA, {
+        code: verificationCode,
+        ...(pendingToken ? { pendingToken } : {}),
+      });
 
-  //     cachePendingTwoFactorToken(null);
+      const data: VerifyResponse = res.data?.data ?? res.data;
+      const parsedUser = parseUserResponse(data);
 
-  //     if (Array.isArray(data?.backupCodes) && data.backupCodes.length > 0) {
-  //       setBackupCodes(data.backupCodes);
-  //       setStage("backup-codes");
-  //     } else {
-  //       setStage("done");
-  //       window.setTimeout(() => router.push("/account"), 1400);
-  //     }
-  //   } catch (err: unknown) {
-  //     const e = err as { message?: string };
-  //     setError(e?.message ?? "Invalid verification code.");
-  //   } finally {
-  //     setVerifying(false);
-  //   }
-  // };
-const submit = async (verificationCode: string) => {
-  if (verificationCode.length !== 6 || verifying) return;
+      if (parsedUser) {
+        cacheUser({ ...parsedUser, twoFactorEnabled: true });
+      } else {
+        const existing = getCachedUser();
 
-  setError(null);
-  setVerifying(true);
-
-  try {
-    const res = await api.post(API.AUTH.VERIFY_SETUP_2FA, {
-      code: verificationCode,
-      ...(pendingToken ? { pendingToken } : {}),
-    });
-
-    const data: VerifyResponse = res.data?.data ?? res.data;
-
-    if (data?.user) {
-      cacheUser({
-        ...(data.user as object),
-        twoFactorEnabled: true,
-      } as Parameters<typeof cacheUser>[0]);
-    } else {
-      const existing = getCachedUser();
-
-      if (existing) {
-        cacheUser({
-          ...existing,
-          twoFactorEnabled: true,
-        });
-      } else if (email) {
-        cacheUser({
-          email,
-          name: email.split("@")[0],
-          role: "user",
-          membership: "free",
-          twoFactorEnabled: true,
-        });
+        if (existing) {
+          cacheUser({
+            ...existing,
+            twoFactorEnabled: true,
+          });
+        } else if (email) {
+          cacheUser({
+            email,
+            name: email.split("@")[0],
+            role: "user",
+            membership: "free",
+            twoFactorEnabled: true,
+          });
+        }
       }
-    }
 
-    cachePendingTwoFactorToken(null);
+      cachePendingTwoFactorToken(null);
 
-    if (Array.isArray(data?.backupCodes) && data.backupCodes.length > 0) {
-      setBackupCodes(data.backupCodes);
-      setStage("backup-codes");
-    } else {
-      setStage("done");
-      window.setTimeout(() => navigate("/account"), 1400);
+      if (Array.isArray(data?.backupCodes) && data.backupCodes.length > 0) {
+        setBackupCodes(data.backupCodes);
+        setStage("backup-codes");
+      } else {
+        setStage("done");
+        window.setTimeout(() => navigate(getPostLoginPath(getCachedUser())), 1400);
+      }
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Invalid verification code."));
+    } finally {
+      setVerifying(false);
     }
-  } catch (err: unknown) {
-    const e = err as { message?: string };
-    setError(e?.message ?? "Invalid verification code.");
-  } finally {
-    setVerifying(false);
-  }
-};
+  };
+
   const copyBackupCodes = async () => {
     await navigator.clipboard.writeText(backupCodes.join("\n"));
     setCopied(true);
@@ -203,7 +157,7 @@ const submit = async (verificationCode: string) => {
 
           <button
             type="button"
-            onClick={() => navigate("/account")}
+            onClick={() => navigate(getPostLoginPath(getCachedUser()))}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-zinc-950 px-5 py-3.5 text-sm font-bold text-white transition hover:opacity-90 dark:bg-white dark:text-black"
           >
             I&apos;ve saved my codes — Continue
@@ -238,7 +192,13 @@ const submit = async (verificationCode: string) => {
           </Link>
         </div>
       ) : (
-        <form onSubmit={submit} className="space-y-5">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit(code);
+          }}
+          className="space-y-5"
+        >
           <div className="flex justify-center">
             <div className="grid size-14 place-items-center rounded-2xl bg-zinc-950 text-white dark:bg-white dark:text-black">
               <ShieldCheck size={26} />
@@ -266,35 +226,22 @@ const submit = async (verificationCode: string) => {
             Scan the QR code with Google Authenticator, then enter the 6-digit code below to confirm.
           </p>
 
-          {/* <input
+          <input
             inputMode="numeric"
-            pattern="\d*"
+            pattern="[0-9]*"
             maxLength={6}
             value={code}
-            onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+            disabled={verifying}
+            onChange={(event) => {
+              const value = event.target.value.replace(/\D/g, "").slice(0, 6);
+              setCode(value);
+              if (value.length === 6) {
+                void submit(value);
+              }
+            }}
             placeholder="6-digit code"
             className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3.5 text-center text-sm font-bold tracking-[0.35em] outline-none focus:border-[#9a6d35] dark:border-white/10 dark:bg-black/30"
-          /> */}
-<input
-  inputMode="numeric"
-  pattern="[0-9]*"
-  maxLength={6}
-  value={code}
-  disabled={verifying}
-  onChange={(event) => {
-    const value = event.target.value
-      .replace(/\D/g, "")
-      .slice(0, 6);
-
-    setCode(value);
-
-    if (value.length === 6) {
-      void submit(value);
-    }
-  }}
-  placeholder="6-digit code"
-  className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3.5 text-center text-sm font-bold tracking-[0.35em] outline-none focus:border-[#9a6d35] dark:border-white/10 dark:bg-black/30"
-/>
+          />
           {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
           <button

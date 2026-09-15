@@ -5,6 +5,7 @@ import { Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/axios";
 import { API } from "@/lib/constants";
 import { getPasswordStrength } from "@/lib/password-strength";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -45,8 +46,8 @@ export default function ResetPasswordPage() {
       await api.post(API.AUTH.RESET_PASS, { token, password });
       setDone(true);
       setTimeout(() => navigate("/signin"), 2500);
-    } catch (err: any) {
-      setError(err?.message ?? "Reset failed. Please try again.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Reset failed. Please try again."));
     } finally {
       setLoading(false);
     }
