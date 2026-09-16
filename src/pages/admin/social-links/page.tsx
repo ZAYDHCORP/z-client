@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { CrudTable } from "@/components/gate/crud-table"
 import { useGate } from "@/lib/gate/store"
 import { PLATFORMS } from "@/lib/gate/platforms"
@@ -13,9 +14,17 @@ const typeOpts = [
 ].map((t) => ({ value: t, label: t.replace(/_/g, " ") }))
 
 export default function SocialLinksPage() {
-  const { data, addSocialLink, updateSocialLink, removeSocialLink } = useGate()
+  const { data, addSocialLink, updateSocialLink, removeSocialLink, ensureSocialLinksLoaded, loadMore, hasMore, isResourceLoading } = useGate()
+
+  useEffect(() => {
+    ensureSocialLinksLoaded()
+  }, [ensureSocialLinksLoaded])
+
   return (
     <CrudTable
+      onLoadMore={() => loadMore("socialLinks")}
+      hasMore={hasMore("socialLinks")}
+      loadingMore={isResourceLoading("socialLinks")}
       title="Social & External Links"
       description="Manage website, YouTube, Spotify, podcasts, social and WhatsApp links per platform without code changes."
       rows={data.socialLinks}

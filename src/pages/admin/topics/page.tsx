@@ -1,11 +1,20 @@
+import { useEffect } from "react"
 import { CrudTable } from "@/components/gate/crud-table"
 import { useGate } from "@/lib/gate/store"
 import type { Topic } from "@/lib/gate/types"
 
 export default function TopicsPage() {
-  const { data, addTopic, updateTopic, removeTopic } = useGate()
+  const { data, addTopic, updateTopic, removeTopic, ensureTopicsLoaded, loadMore, hasMore, isResourceLoading } = useGate()
+
+  useEffect(() => {
+    ensureTopicsLoaded()
+  }, [ensureTopicsLoaded])
+
   return (
     <CrudTable
+      onLoadMore={() => loadMore("topics")}
+      hasMore={hasMore("topics")}
+      loadingMore={isResourceLoading("topics")}
       title="Topics"
       description="Topical metadata used for discovery and recommendations."
       rows={data.topics}

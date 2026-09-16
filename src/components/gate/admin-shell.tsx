@@ -305,9 +305,9 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
     .filter(Boolean)
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r border-border bg-card lg:block">
+      <aside className="hidden w-64 shrink-0 border-r border-border bg-sidebar lg:block">
         <SidebarContent pathname={pathname} />
       </aside>
 
@@ -318,7 +318,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
             className="absolute inset-0 bg-black/50"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute left-0 top-0 h-full w-64 border-r border-border bg-card">
+          <aside className="absolute left-0 top-0 h-full w-64 border-r border-border bg-sidebar">
             <SidebarContent
               pathname={pathname}
               onNav={() => setMobileOpen(false)}
@@ -327,9 +327,9 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur lg:px-6">
+        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur lg:px-6">
           <Button
             variant="ghost"
             size="icon"
@@ -339,7 +339,9 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
             <PanelLeft className="h-5 w-5" />
           </Button>
           <nav className="hidden items-center gap-1.5 text-sm text-muted-foreground md:flex">
-            <span className="font-medium text-foreground">.Gate</span>
+            <Link to="/admin" className="text-foreground hover:text-foreground/70" aria-label="Dashboard">
+              <Home className="h-3.5 w-3.5" />
+            </Link>
             {crumbs.map((c, i) => (
               <span key={i} className="flex items-center gap-1.5">
                 <span>/</span>
@@ -411,7 +413,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
           </DropdownMenu>
         </header>
 
-        <main className="flex-1 px-4 py-6 lg:px-8">{children}</main>
+        <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-8">{children}</main>
       </div>
     </div>
   )

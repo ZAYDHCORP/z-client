@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { CrudTable } from "@/components/gate/crud-table"
 import { useGate } from "@/lib/gate/store"
 import { Button } from "@/components/ui/button"
@@ -7,7 +7,12 @@ import { Image as ImageIcon, FileText, Music, Copy } from "lucide-react"
 import type { MediaAsset } from "@/lib/gate/types"
 
 export default function MediaLibraryPage() {
-  const { data, removeMedia, updateMedia } = useGate()
+  const { data, removeMedia, updateMedia, ensureMediaLoaded, loadMore, hasMore, isResourceLoading } = useGate()
+
+  useEffect(() => {
+    ensureMediaLoaded()
+  }, [ensureMediaLoaded])
+
   const [folder, setFolder] = useState("all")
 
   const folders = useMemo(
@@ -37,6 +42,9 @@ export default function MediaLibraryPage() {
       </div>
 
       <CrudTable
+        onLoadMore={() => loadMore("mediaAssets")}
+        hasMore={hasMore("mediaAssets")}
+        loadingMore={isResourceLoading("mediaAssets")}
         title="Media Library"
         description="Central media with folders, search, alt text, optimisation and duplicate detection."
         rows={rows}

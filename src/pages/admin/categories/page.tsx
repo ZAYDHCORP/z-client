@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { CrudTable } from "@/components/gate/crud-table"
 import { StatusBadge } from "@/components/gate/ui"
 import { useGate } from "@/lib/gate/store"
@@ -10,9 +11,17 @@ const platformOpts = [
 ]
 
 export default function CategoriesPage() {
-  const { data, addCategory, updateCategory, removeCategory } = useGate()
+  const { data, addCategory, updateCategory, removeCategory, ensureCategoriesLoaded, loadMore, hasMore, isResourceLoading } = useGate()
+
+  useEffect(() => {
+    ensureCategoriesLoaded()
+  }, [ensureCategoriesLoaded])
+
   return (
     <CrudTable
+      onLoadMore={() => loadMore("categories")}
+      hasMore={hasMore("categories")}
+      loadingMore={isResourceLoading("categories")}
       title="Categories"
       description="Dynamic taxonomy. Create unlimited categories per platform with ordering and status."
       rows={data.categories}

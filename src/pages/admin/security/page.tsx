@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { Lock, ShieldCheck, KeyRound, Activity } from "lucide-react"
 import { toast } from "sonner"
 import { PageHeader, StatusBadge } from "@/components/gate/ui"
@@ -17,7 +18,12 @@ import {
 } from "@/components/ui/table"
 
 export default function SecurityPage() {
-  const { data, updateSettings } = useGate()
+  const { data, updateSettings, ensureAuditLogsLoaded } = useGate()
+
+  useEffect(() => {
+    ensureAuditLogsLoaded()
+  }, [ensureAuditLogsLoaded])
+
   const s = data.settings
 
   return (

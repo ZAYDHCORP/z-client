@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { Pencil, RefreshCw, Rss, Star, CheckCircle2 } from "lucide-react"
 import { PageHeader, StatusBadge } from "@/components/gate/ui"
@@ -34,7 +34,14 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 
 export default function RssManagerPage() {
-  const { data, syncRssFeed } = useGate()
+  const { data, syncRssFeed, ensureContentLoaded, ensureCategoriesLoaded, ensureRssLoaded } = useGate()
+
+  useEffect(() => {
+    ensureContentLoaded()
+    ensureCategoriesLoaded()
+    ensureRssLoaded()
+  }, [ensureContentLoaded, ensureCategoriesLoaded, ensureRssLoaded])
+
   const [platform, setPlatform] = useState("all")
   const [editing, setEditing] = useState<PodcastEpisode | null>(null)
   const [open, setOpen] = useState(false)

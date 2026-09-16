@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
 import {
@@ -45,7 +45,21 @@ const inr = (n: number) =>
   "₹" + n.toLocaleString("en-IN")
 
 export default function OverviewPage() {
-  const { data, syncRssFeed } = useGate()
+  const {
+    data,
+    syncRssFeed,
+    ensureContentLoaded,
+    ensureUsersLoaded,
+    ensureCategoriesLoaded,
+    ensureRssLoaded,
+  } = useGate()
+
+  useEffect(() => {
+    ensureContentLoaded()
+    ensureUsersLoaded()
+    ensureCategoriesLoaded()
+    ensureRssLoaded()
+  }, [ensureContentLoaded, ensureUsersLoaded, ensureCategoriesLoaded, ensureRssLoaded])
 
   const stats = useMemo(() => {
     const users = data.users

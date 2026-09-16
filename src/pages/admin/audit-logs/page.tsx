@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Search } from "lucide-react"
 import { PageHeader, StatusBadge } from "@/components/gate/ui"
 import { useGate } from "@/lib/gate/store"
@@ -19,9 +19,15 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 export default function AuditLogsPage() {
-  const { data } = useGate()
+  const { data, ensureAuditLogsLoaded, loadMore, hasMore, isResourceLoading } = useGate()
+
+  useEffect(() => {
+    ensureAuditLogsLoaded()
+  }, [ensureAuditLogsLoaded])
+
   const [q, setQ] = useState("")
   const [result, setResult] = useState("all")
 
@@ -99,6 +105,14 @@ export default function AuditLogsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {hasMore("auditLogs") && !q && result === "all" && (
+        <div className="mt-4 flex justify-center">
+          <Button variant="outline" onClick={() => loadMore("auditLogs")} disabled={isResourceLoading("auditLogs")}>
+            {isResourceLoading("auditLogs") ? "Loading…" : "Load more"}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import {
   Area,
   AreaChart,
@@ -18,7 +18,14 @@ import { PLATFORMS, PLATFORM_MAP } from "@/lib/gate/platforms"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function AnalyticsPage() {
-  const { data } = useGate()
+  const { data, ensureContentLoaded, ensureUsersLoaded, ensureRssLoaded } = useGate()
+
+  useEffect(() => {
+    ensureContentLoaded()
+    ensureUsersLoaded()
+    ensureRssLoaded()
+  }, [ensureContentLoaded, ensureUsersLoaded, ensureRssLoaded])
+
   const all = [...data.books, ...data.research, ...data.infographics, ...data.podcasts]
 
   const platformPerf = useMemo(

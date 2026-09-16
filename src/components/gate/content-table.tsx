@@ -64,8 +64,17 @@ const typeKey: Record<ContentType, keyof ReturnType<typeof useGate>["data"]> = {
 }
 
 export function ContentTable({ type }: { type: ContentType }) {
-  const { data, updateContent, setContentStatus, toggleFeatured, duplicateContent, removeContent } =
-    useGate()
+  const {
+    data,
+    updateContent,
+    setContentStatus,
+    toggleFeatured,
+    duplicateContent,
+    removeContent,
+    loadMore,
+    hasMore,
+    isResourceLoading,
+  } = useGate()
   const [query, setQuery] = useState("")
   const [platform, setPlatform] = useState<string>("all")
   const [status, setStatus] = useState<string>("all")
@@ -292,6 +301,18 @@ export function ContentTable({ type }: { type: ContentType }) {
           </TableBody>
         </Table>
       </div>
+
+      {/* Books/research/infographics/podcasts all come from one shared,
+          mixed-type /admin/content endpoint — "Load more" advances that one
+          shared page cursor, so a click here may bring in mostly other
+          content types before more of *this* type shows up. */}
+      {hasMore("content") && !query && platform === "all" && status === "all" && (
+        <div className="flex justify-center">
+          <Button variant="outline" onClick={() => loadMore("content")} disabled={isResourceLoading("content")}>
+            {isResourceLoading("content") ? "Loading…" : "Load more"}
+          </Button>
+        </div>
+      )}
 
       <ContentEditor
         type={type}

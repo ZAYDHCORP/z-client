@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { Pencil, Plus, Search, ShieldAlert, Trash2 } from "lucide-react"
 import { PageHeader, StatusBadge } from "@/components/gate/ui"
@@ -33,7 +33,12 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 export default function UsersPage() {
-  const { data, updateUser, removeUser } = useGate()
+  const { data, updateUser, removeUser, ensureUsersLoaded, loadMore, hasMore, isResourceLoading } = useGate()
+
+  useEffect(() => {
+    ensureUsersLoaded()
+  }, [ensureUsersLoaded])
+
   const [q, setQ] = useState("")
   const [role, setRole] = useState("all")
   const [editing, setEditing] = useState<UserRecord | null>(null)
@@ -151,6 +156,14 @@ export default function UsersPage() {
           </TableBody>
         </Table>
       </div>
+
+      {hasMore("users") && !q && role === "all" && (
+        <div className="mt-4 flex justify-center">
+          <Button variant="outline" onClick={() => loadMore("users")} disabled={isResourceLoading("users")}>
+            {isResourceLoading("users") ? "Loading…" : "Load more"}
+          </Button>
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

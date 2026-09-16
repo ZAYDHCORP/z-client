@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { Search, Pencil, CheckCircle2, AlertCircle } from "lucide-react"
 import { PageHeader, StatusBadge, PlatformPill } from "@/components/gate/ui"
@@ -31,7 +31,12 @@ import {
 } from "@/components/ui/dialog"
 
 export default function SeoAeoPage() {
-  const { data, updateContent } = useGate()
+  const { data, updateContent, ensureContentLoaded } = useGate()
+
+  useEffect(() => {
+    ensureContentLoaded()
+  }, [ensureContentLoaded])
+
   const [q, setQ] = useState("")
   const [platform, setPlatform] = useState("ALL")
   const [editing, setEditing] = useState<AnyContent | null>(null)

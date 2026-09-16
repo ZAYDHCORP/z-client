@@ -1,11 +1,20 @@
+import { useEffect } from "react"
 import { CrudTable } from "@/components/gate/crud-table"
 import { useGate } from "@/lib/gate/store"
 import type { Region } from "@/lib/gate/types"
 
 export default function RegionsPage() {
-  const { data, addRegion, updateRegion, removeRegion } = useGate()
+  const { data, addRegion, updateRegion, removeRegion, ensureRegionsLoaded, loadMore, hasMore, isResourceLoading } = useGate()
+
+  useEffect(() => {
+    ensureRegionsLoaded()
+  }, [ensureRegionsLoaded])
+
   return (
     <CrudTable
+      onLoadMore={() => loadMore("regions")}
+      hasMore={hasMore("regions")}
+      loadingMore={isResourceLoading("regions")}
       title="Regions"
       description="Regional and international tags for geographic discovery."
       rows={data.regions}

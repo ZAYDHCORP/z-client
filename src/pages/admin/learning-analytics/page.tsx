@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import {
   Bar,
   BarChart,
@@ -23,7 +23,12 @@ import {
 } from "@/components/ui/table"
 
 export default function LearningAnalyticsPage() {
-  const { data } = useGate()
+  const { data, ensureUsersLoaded } = useGate()
+
+  useEffect(() => {
+    ensureUsersLoaded()
+  }, [ensureUsersLoaded])
+
   const users = data.users
 
   const totals = useMemo(() => {

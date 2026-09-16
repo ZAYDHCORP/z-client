@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { CrudTable } from "@/components/gate/crud-table"
 import { useGate } from "@/lib/gate/store"
 import { PLATFORMS } from "@/lib/gate/platforms"
@@ -9,9 +10,17 @@ const platformOpts = [
 ]
 
 export default function TagsPage() {
-  const { data, addTag, updateTag, removeTag } = useGate()
+  const { data, addTag, updateTag, removeTag, ensureTagsLoaded, loadMore, hasMore, isResourceLoading } = useGate()
+
+  useEffect(() => {
+    ensureTagsLoaded()
+  }, [ensureTagsLoaded])
+
   return (
     <CrudTable
+      onLoadMore={() => loadMore("tags")}
+      hasMore={hasMore("tags")}
+      loadingMore={isResourceLoading("tags")}
       title="Tags"
       description="Reusable tags attached to content across platforms."
       rows={data.tags}

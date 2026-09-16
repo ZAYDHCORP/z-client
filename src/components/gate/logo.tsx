@@ -10,27 +10,23 @@ export function GateLogo({
   size?: "sm" | "md" | "lg"
 }) {
   const dot =
-    size === "lg" ? "h-5 w-5" : size === "sm" ? "h-2.5 w-2.5" : "h-3.5 w-3.5"
+    size === "lg" ? "h-10 w-10" : size === "sm" ? "h-5 w-5" : "h-7 w-7"
   const text =
-    size === "lg" ? "text-3xl" : size === "sm" ? "text-base" : "text-xl"
+    size === "lg" ? "text-xl" : size === "sm" ? "text-sm" : "text-base"
   return (
     <span className={cn("inline-flex items-center gap-1.5", className)}>
       <span
         className={cn(
-          "relative inline-block bg-[url('/gate-icon.png')] bg-contain bg-center bg-no-repeat invert",
+          "relative inline-block shrink-0 bg-[url('/gate-icon.png')] bg-contain bg-center bg-no-repeat dark:invert",
           dot,
         )}
         aria-hidden
       />
       {showText && (
         <span
-          className={cn(
-            "font-semibold tracking-tight text-foreground",
-            text,
-          )}
-          style={{ fontFamily: "'Hoefler Text', Georgia, 'Times New Roman', serif" }}
+          className={cn("font-serif font-semibold tracking-tight text-foreground", text)}
         >
-          Gate
+          .Gate
         </span>
       )}
     </span>

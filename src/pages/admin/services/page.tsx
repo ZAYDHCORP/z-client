@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { CrudTable } from "@/components/gate/crud-table"
 import { StatusBadge } from "@/components/gate/ui"
 import { useGate } from "@/lib/gate/store"
@@ -7,9 +8,17 @@ import type { ServiceRecord } from "@/lib/gate/types"
 const platformOpts = PLATFORMS.map((p) => ({ value: p.id, label: p.name }))
 
 export default function ServicesPage() {
-  const { data, addService, updateService, removeService } = useGate()
+  const { data, addService, updateService, removeService, ensureServicesLoaded, loadMore, hasMore, isResourceLoading } = useGate()
+
+  useEffect(() => {
+    ensureServicesLoaded()
+  }, [ensureServicesLoaded])
+
   return (
     <CrudTable
+      onLoadMore={() => loadMore("services")}
+      hasMore={hasMore("services")}
+      loadingMore={isResourceLoading("services")}
       title="Services"
       description="Platform-specific service pages with their own landing content, enquiry CTAs and WhatsApp contact."
       rows={data.services}

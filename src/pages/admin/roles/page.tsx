@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { Shield, Check, Minus } from "lucide-react"
 import { PageHeader, StatusBadge } from "@/components/gate/ui"
 import { useGate } from "@/lib/gate/store"
@@ -30,7 +30,12 @@ const CAPABILITIES: { label: string; access: Record<(typeof ROLES)[number], bool
 ]
 
 export default function RolesPage() {
-  const { data } = useGate()
+  const { data, ensureUsersLoaded } = useGate()
+
+  useEffect(() => {
+    ensureUsersLoaded()
+  }, [ensureUsersLoaded])
+
   const counts = useMemo(() => {
     const map: Record<string, number> = {}
     for (const u of data.users) map[u.role] = (map[u.role] ?? 0) + 1

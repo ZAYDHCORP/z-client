@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { Globe, BookOpen, FileText, Folder, Boxes, Webhook, ArrowLeft } from "lucide-react"
 import { PageHeader, StatCard, StatusBadge } from "@/components/gate/ui"
@@ -17,7 +18,31 @@ import {
 export default function PlatformPage() {
   const params = useParams<{ id: string }>()
   const id = (params.id ?? "") as PlatformId
-  const { data } = useGate()
+  const {
+    data,
+    ensureContentLoaded,
+    ensureUsersLoaded,
+    ensureCategoriesLoaded,
+    ensureServicesLoaded,
+    ensureSocialLinksLoaded,
+    ensureRssLoaded,
+  } = useGate()
+
+  useEffect(() => {
+    ensureContentLoaded()
+    ensureUsersLoaded()
+    ensureCategoriesLoaded()
+    ensureServicesLoaded()
+    ensureSocialLinksLoaded()
+    ensureRssLoaded()
+  }, [
+    ensureContentLoaded,
+    ensureUsersLoaded,
+    ensureCategoriesLoaded,
+    ensureServicesLoaded,
+    ensureSocialLinksLoaded,
+    ensureRssLoaded,
+  ])
 
   if (!PLATFORM_MAP[id]) {
     return (

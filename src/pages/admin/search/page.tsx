@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Search, TrendingUp, Filter } from "lucide-react"
 import { PageHeader } from "@/components/gate/ui"
 import { useGate } from "@/lib/gate/store"
@@ -8,7 +8,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
 export default function SearchAdminPage() {
-  const { data } = useGate()
+  const { data, ensureContentLoaded } = useGate()
+
+  useEffect(() => {
+    ensureContentLoaded()
+  }, [ensureContentLoaded])
+
   const [q, setQ] = useState("")
 
   const all = [

@@ -55,6 +55,9 @@ export function CrudTable<T extends { id: string }>({
   searchKeys,
   addLabel = "Add",
   dialogTitle = "Edit",
+  onLoadMore,
+  hasMore,
+  loadingMore,
 }: {
   title: string
   description?: string
@@ -67,6 +70,10 @@ export function CrudTable<T extends { id: string }>({
   searchKeys: (keyof T)[]
   addLabel?: string
   dialogTitle?: string
+  /** Pagination — pass all three together to show a "Load more" footer. */
+  onLoadMore?: () => void
+  hasMore?: boolean
+  loadingMore?: boolean
 }) {
   const [q, setQ] = useState("")
   const [editing, setEditing] = useState<T | null>(null)
@@ -149,6 +156,14 @@ export function CrudTable<T extends { id: string }>({
           </TableBody>
         </Table>
       </div>
+
+      {onLoadMore && hasMore && !q && (
+        <div className="mt-4 flex justify-center">
+          <Button variant="outline" onClick={onLoadMore} disabled={loadingMore}>
+            {loadingMore ? "Loading…" : "Load more"}
+          </Button>
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="flex max-h-[90vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">

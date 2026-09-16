@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ArrowDown, ArrowUp, Pin, Star } from "lucide-react"
 import { PageHeader } from "@/components/gate/ui"
 import { useGate } from "@/lib/gate/store"
@@ -15,7 +15,12 @@ import {
 import { Input } from "@/components/ui/input"
 
 export default function FeedOrderingPage() {
-  const { data, reorderContent, toggleFeatured, togglePin } = useGate()
+  const { data, reorderContent, toggleFeatured, togglePin, ensureContentLoaded } = useGate()
+
+  useEffect(() => {
+    ensureContentLoaded()
+  }, [ensureContentLoaded])
+
   const [platform, setPlatform] = useState<string>("all")
   const [type, setType] = useState<ContentType>("book")
 

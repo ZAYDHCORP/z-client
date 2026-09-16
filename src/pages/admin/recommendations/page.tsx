@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Sparkles, Star } from "lucide-react"
 import { PageHeader } from "@/components/gate/ui"
 import { useGate } from "@/lib/gate/store"
@@ -8,7 +8,12 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
 export default function RecommendationsPage() {
-  const { data, toggleFeatured } = useGate()
+  const { data, toggleFeatured, ensureContentLoaded } = useGate()
+
+  useEffect(() => {
+    ensureContentLoaded()
+  }, [ensureContentLoaded])
+
   const [type, setType] = useState("all")
 
   const featured = useMemo(
