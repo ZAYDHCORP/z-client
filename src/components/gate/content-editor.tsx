@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ChangeEvent } from "react"
 import { toast } from "sonner"
 import { Copy, Eye, Star, Trash2, Archive, Upload } from "lucide-react"
 import {
@@ -33,6 +33,26 @@ import type {
   SeoAeo,
 } from "@/lib/gate/types"
 import { StatusBadge } from "./ui"
+
+function readImageAsDataUrl(file: File, onLoaded: (dataUrl: string) => void) {
+  const reader = new FileReader()
+  reader.onload = () => onLoaded(reader.result as string)
+  reader.readAsDataURL(file)
+}
+
+function ImageUploadButton({ onFile }: { onFile: (file: File) => void }) {
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) onFile(file)
+    e.target.value = ""
+  }
+  return (
+    <label className="mt-2 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-xs hover:bg-accent/40">
+      <Upload className="h-3.5 w-3.5" /> Upload image
+      <input type="file" accept="image/*" className="hidden" onChange={handleChange} />
+    </label>
+  )
+}
 
 function emptySeo(title: string, slug: string): SeoAeo {
   return {
@@ -162,7 +182,7 @@ export function ContentEditor({
       toast.success(`${labels[type]} updated`)
     } else {
       addContent(finalForm)
-      toast.success(`${labels[type]} created as draft`)
+      toast.success(`${labels[type]} created as ${finalForm.status}`)
     }
     onOpenChange(false)
   }
@@ -187,7 +207,7 @@ export function ContentEditor({
           {/* Media + preview */}
           {(type === "book" || type === "research") && (
             <div className="flex gap-4">
-              <div className="w-28 shrink-0">
+              <div className="w-36 shrink-0">
                 <Label className="mb-1.5 block text-xs">Cover (16:25)</Label>
                 <div className="aspect-[16/25] overflow-hidden rounded-lg border border-border bg-muted">
                   {(form as BookContent).cover ? (
@@ -204,10 +224,17 @@ export function ContentEditor({
                 </div>
                 <Input
                   className="mt-2 text-xs"
-                  placeholder="Cover image URL"
+                  placeholder="Cover URL"
                   value={(form as BookContent).cover}
                   onChange={(e) =>
                     set({ cover: e.target.value } as Partial<AnyContent>)
+                  }
+                />
+                <ImageUploadButton
+                  onFile={(file) =>
+                    readImageAsDataUrl(file, (dataUrl) =>
+                      set({ cover: dataUrl } as Partial<AnyContent>),
+                    )
                   }
                 />
               </div>
@@ -239,7 +266,7 @@ export function ContentEditor({
 
           {type === "infographic" && (
             <div className="flex gap-4">
-              <div className="w-32 shrink-0">
+              <div className="w-36 shrink-0">
                 <Label className="mb-1.5 block text-xs">Image (4:5)</Label>
                 <div className="aspect-[4/5] overflow-hidden rounded-lg border border-border bg-muted">
                   {(form as InfographicContent).image ? (
@@ -260,6 +287,13 @@ export function ContentEditor({
                   value={(form as InfographicContent).image}
                   onChange={(e) =>
                     set({ image: e.target.value } as Partial<AnyContent>)
+                  }
+                />
+                <ImageUploadButton
+                  onFile={(file) =>
+                    readImageAsDataUrl(file, (dataUrl) =>
+                      set({ image: dataUrl } as Partial<AnyContent>),
+                    )
                   }
                 />
               </div>
@@ -351,7 +385,7 @@ export function ContentEditor({
                 value={form.platform}
                 onValueChange={(v) => set({ platform: v as PlatformId })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -368,7 +402,7 @@ export function ContentEditor({
                 value={form.category}
                 onValueChange={(v) => set({ category: v })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -387,7 +421,7 @@ export function ContentEditor({
                   set({ status: v as AnyContent["status"] })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

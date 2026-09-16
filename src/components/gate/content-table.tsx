@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import {
   Eye,
+  Globe,
   Pencil,
   Plus,
   Star,
@@ -9,10 +10,11 @@ import {
   Archive,
   Trash2,
   MoreVertical,
-  ExternalLink,
+  Clock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -74,7 +76,13 @@ export function ContentTable({ type }: { type: ContentType }) {
     loadMore,
     hasMore,
     isResourceLoading,
+    ensureCategoriesLoaded,
   } = useGate()
+
+  useEffect(() => {
+    ensureCategoriesLoaded()
+  }, [ensureCategoriesLoaded])
+
   const [query, setQuery] = useState("")
   const [platform, setPlatform] = useState<string>("all")
   const [status, setStatus] = useState<string>("all")
@@ -224,33 +232,39 @@ export function ContentTable({ type }: { type: ContentType }) {
                       <DropdownMenuItem onClick={() => setPreview(item)}>
                         <Eye className="mr-2 h-4 w-4" /> Preview
                       </DropdownMenuItem>
-                      {item.status !== "published" && (
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setContentStatus(item.id, "published")
-                            toast.success("Published")
+                      <DropdownMenuSeparator />
+                      <div className="flex items-center justify-between px-2 py-1.5 text-sm">
+                        <span className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-muted-foreground" /> Published
+                        </span>
+                        <Switch
+                          checked={item.status === "published"}
+                          onCheckedChange={(v) => {
+                            setContentStatus(item.id, v ? "published" : "draft")
+                            toast.success(v ? "Published" : "Moved to draft")
                           }}
-                        >
-                          <ExternalLink className="mr-2 h-4 w-4" /> Publish
-                        </DropdownMenuItem>
-                      )}
-                      {item.status === "published" && (
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setContentStatus(item.id, "unpublished")
-                            toast.success("Unpublished")
+                        />
+                      </div>
+                      <div className="flex items-center justify-between px-2 py-1.5 text-sm">
+                        <span className="flex items-center gap-2">
+                          <Star className="h-4 w-4 text-muted-foreground" /> Featured
+                        </span>
+                        <Switch
+                          checked={item.featured}
+                          onCheckedChange={() => {
+                            toggleFeatured(item.id)
+                            toast.success(item.featured ? "Unfeatured" : "Featured")
                           }}
-                        >
-                          Unpublish
-                        </DropdownMenuItem>
-                      )}
+                        />
+                      </div>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => {
                           setContentStatus(item.id, "scheduled")
                           toast.success("Marked scheduled")
                         }}
                       >
-                        Schedule
+                        <Clock className="mr-2 h-4 w-4" /> Schedule
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
@@ -259,17 +273,6 @@ export function ContentTable({ type }: { type: ContentType }) {
                         }}
                       >
                         <Archive className="mr-2 h-4 w-4" /> Archive
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          toggleFeatured(item.id)
-                          toast.success(
-                            item.featured ? "Unfeatured" : "Featured",
-                          )
-                        }}
-                      >
-                        <Star className="mr-2 h-4 w-4" />
-                        {item.featured ? "Unfeature" : "Feature"}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
