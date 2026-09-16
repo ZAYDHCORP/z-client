@@ -73,7 +73,7 @@ export default function ApiManagementPage() {
     <div>
       <PageHeader
         title="API Management"
-        description="Issue and revoke programmatic access keys for the .Gate public API, RSS ingestion and partner integrations."
+        description="Issue and revoke programmatic access keys for the • Gate public API, RSS ingestion and partner integrations."
         actions={
           <Button onClick={() => setOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" /> Generate Key

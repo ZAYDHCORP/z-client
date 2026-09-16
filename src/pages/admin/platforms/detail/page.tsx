@@ -47,7 +47,7 @@ export default function PlatformPage() {
   if (!PLATFORM_MAP[id]) {
     return (
       <div>
-        <PageHeader title="Unknown Platform" description={`'${id}' is not a valid .Gate platform.`} />
+        <PageHeader title="Unknown Platform" description={`'${id}' is not a valid • Gate platform.`} />
         <div className="flex gap-2">
           {PLATFORMS.map((p) => (
             <Link key={p.id} to={`/admin/platforms/${p.id}`} className="text-sm text-primary underline">{p.name}</Link>

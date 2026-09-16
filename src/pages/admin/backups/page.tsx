@@ -20,7 +20,7 @@ export default function BackupsPage() {
     <div>
       <PageHeader
         title="Backups"
-        description="Automated and on-demand snapshots of the .Gate database, media and configuration. Restore to any verified point."
+        description="Automated and on-demand snapshots of the • Gate database, media and configuration. Restore to any verified point."
         actions={
           <Button onClick={() => { createBackup(); toast.success("Backup created") }}>
             <Plus className="mr-1.5 h-4 w-4" /> Create Backup

@@ -37,17 +37,17 @@ const uid = (p: string) => `${p}_${(++n).toString().padStart(4, "0")}`
 function defaultSeo(title: string, slug: string) {
   return {
     seoTitle: title,
-    metaDescription: `${title} — published on .Gate across the unified knowledge ecosystem.`,
+    metaDescription: `${title} — published on • Gate across the unified knowledge ecosystem.`,
     focusKeyword: slug.split("-")[0] ?? "gate",
     slug,
     canonicalUrl: `https://gate.app/${slug}`,
     ogTitle: title,
-    ogDescription: `${title} on .Gate.`,
+    ogDescription: `${title} on • Gate.`,
     ogImage: "",
     twitterCard: "summary_large_image" as const,
     schemaType: "Article",
     robots: "index,follow",
-    aeoSummary: `${title} is part of the .Gate knowledge ecosystem.`,
+    aeoSummary: `${title} is part of the • Gate knowledge ecosystem.`,
     faq: [],
   }
 }
@@ -82,7 +82,7 @@ const books: BookContent[] = [
     cover: "",
     subtitle: "How Information Empires Shape What We Believe",
     pdfUrl: "",
-    publicationInfo: "First edition · 2024 · .Gate Press",
+    publicationInfo: "First edition · 2024 · • Gate Press",
     purchaseLinks: {
       paperback: { enabled: true, url: "https://amazon.in/dp/example" },
       ebook: { enabled: true, url: "https://notionpress.com/example" },
@@ -282,7 +282,7 @@ const research: ResearchContent[] = [
     createdAt: daysAgo(40),
     updatedAt: daysAgo(3),
     publishedAt: daysAgo(20),
-    author: ".Gate Research Desk",
+    author: "• Gate Research Desk",
     description:
       "Our annual benchmark of 40 institutions ranked on transparency, risk-sharing products and community reinvestment. Includes methodology, scoring and policy recommendations for regulators.",
     cover: "",
@@ -325,7 +325,7 @@ const research: ResearchContent[] = [
     createdAt: daysAgo(30),
     updatedAt: daysAgo(6),
     publishedAt: daysAgo(14),
-    author: ".Gate Research Desk",
+    author: "• Gate Research Desk",
     description:
       "A cross-country index measuring exposure, resilience and policy response to coordinated misinformation campaigns.",
     cover: "",
@@ -367,7 +367,7 @@ const research: ResearchContent[] = [
     createdAt: daysAgo(8),
     updatedAt: daysAgo(2),
     scheduledAt: daysAhead(3),
-    author: ".Gate Research Desk",
+    author: "• Gate Research Desk",
     description:
       "Applying network analysis to the isnad literature to visualise how collections relate.",
     cover: "",
@@ -1047,7 +1047,7 @@ const services: ServiceRecord[] = [
     shortDescription:
       "Commissioned, methodology-led research on public policy and society.",
     fullDescription:
-      "Work with the .Gate Research Desk to produce rigorous, citable reports on the topics that matter to your organisation.",
+      "Work with the • Gate Research Desk to produce rigorous, citable reports on the topics that matter to your organisation.",
     benefits: ["Rigorous methodology", "Citable outputs", "Data visualisation"],
     pricingMode: "contact",
     pricingText: "Project-based pricing.",

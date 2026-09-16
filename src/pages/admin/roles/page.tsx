@@ -46,7 +46,7 @@ export default function RolesPage() {
     <div>
       <PageHeader
         title="Roles & Permissions"
-        description="Role-based access control across the .Gate admin. Assign roles from the Users page; capabilities are enforced here."
+        description="Role-based access control across the • Gate admin. Assign roles from the Users page; capabilities are enforced here."
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">

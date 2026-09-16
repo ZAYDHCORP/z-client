@@ -423,7 +423,7 @@ export default function GateReader({
             {currentPageData.type === "cover" ? (
               <div className="text-center py-12 flex flex-col items-center justify-center space-y-6">
                 <div className="w-40 sm:w-48 aspect-[16/25] rounded-2xl bg-gradient-to-br from-amber-800 to-amber-950 text-white p-4 shadow-2xl flex flex-col justify-between border border-white/20">
-                  <span className="text-xs font-sans tracking-widest uppercase text-amber-200">.Gate Edition</span>
+                  <span className="text-xs font-sans tracking-widest uppercase text-amber-200">• Gate Edition</span>
                   <h2 className="font-serif text-xl font-bold leading-tight">{book.title}</h2>
                   <span className="text-xs font-sans text-amber-100">{book.author}</span>
                 </div>

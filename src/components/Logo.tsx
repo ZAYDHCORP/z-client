@@ -1,4 +1,5 @@
-const LETTERS = [".", "G", "a", "t", "e"];
+const BULLET = ["•"];
+const LETTERS = [" G", "a", "t", "e"];
 
 export function Logo({
   withWordmark = true,
@@ -13,7 +14,7 @@ export function Logo({
   return (
     <div
       className="gate-logo-wrapper cursor-pointer select-none"
-      aria-label=".Gate"
+      aria-label="• Gate"
     >
       <span
         className={`gate-dot heartbeat${compact ? "" : " gate-dot-lg"}${invert ? " gate-dot-invert" : ""}`}
@@ -27,11 +28,30 @@ export function Logo({
               : "text-3xl sm:text-4xl gate-wordmark"
           }
         >
-          {LETTERS.map((letter, i) => (
+          {BULLET.map((letter, i) => (
             <span
               key={i}
               className="letter-reveal"
               style={{ animationDelay: `${i * 70}ms` }}
+            >
+              {letter}
+            </span>
+          ))}
+        </span>
+      )}
+      {withWordmark && (
+        <span
+          className={
+            compact
+              ? "text-xl sm:text-2xl lg:text-[1.75rem] gate-wordmark"
+              : "text-3xl sm:text-4xl gate-wordmark"
+          }
+        >
+          {LETTERS.map((letter, i) => (
+            <span
+              key={i}
+              className="letter-reveal"
+              style={{ animationDelay: `${i * 75}ms` }}
             >
               {letter}
             </span>

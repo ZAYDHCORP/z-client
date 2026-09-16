@@ -65,7 +65,7 @@ export default function LearningAnalyticsPage() {
     <div>
       <PageHeader
         title="Learning Analytics"
-        description="Reading and listening engagement, streaks and learning progress across the .Gate libraries."
+        description="Reading and listening engagement, streaks and learning progress across the • Gate libraries."
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

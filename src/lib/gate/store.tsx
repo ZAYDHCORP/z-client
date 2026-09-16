@@ -78,7 +78,7 @@ export interface GateData {
 }
 
 const SETTINGS: GateSettings = {
-  siteName: ".Gate",
+  siteName: "• Gate",
   tagline: "Learn. Discover. Grow.",
   defaultAppearance: "system",
   defaultCurrency: "INR",

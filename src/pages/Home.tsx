@@ -36,7 +36,7 @@ import ServiceLandingModal from "@/components/ServiceLandingModal";
 import { hubs, hubByKey, gateSocials, zSocials } from "@/lib/gate-data";
 import SocialLinks from "@/components/SocialLinks";
 import { Typewriter } from "@/components/TypeWriter";
-import { ClientUser, fetchCurrentUser, getCachedUser } from "@/lib/client-auth";
+import { ClientUser, fetchCurrentUser, getCachedUser, getPostLoginPath } from "@/lib/client-auth";
 import {
   PlatformKey,
   platforms,
@@ -167,12 +167,30 @@ export default function Home() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <a href="#home"><Logo compact /></a>
           <nav className="hidden items-center gap-1 rounded-full border border-black/10 bg-white/55 p-1 text-sm dark:border-white/10 dark:bg-white/5 lg:flex">
-            {nav.map((item) => <a className="rounded-full px-4 py-2 text-zinc-700 transition hover:bg-black hover:text-white dark:text-zinc-200 dark:hover:bg-white dark:hover:text-black" href={`#${item.toLowerCase().replaceAll(" ", "-")}`} key={item}>{item}</a>)}
+            {nav.map((item) =>
+              item === "Dashboard" ? (
+                <a
+                  className="rounded-full px-4 py-2 text-zinc-700 transition hover:bg-black hover:text-white dark:text-zinc-200 dark:hover:bg-white dark:hover:text-black"
+                  href={signedIn ? getPostLoginPath(user) : "#dashboard"}
+                  key={item}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(signedIn ? getPostLoginPath(user) : "/signin");
+                  }}
+                >
+                  {item}
+                </a>
+              ) : (
+                <a className="rounded-full px-4 py-2 text-zinc-700 transition hover:bg-black hover:text-white dark:text-zinc-200 dark:hover:bg-white dark:hover:text-black" href={`#${item.toLowerCase().replaceAll(" ", "-")}`} key={item}>{item}</a>
+              ),
+            )}
           </nav>
           <div className="flex items-center gap-2">
             <SocialLinks links={gateSocials} className="hidden lg:flex" />
             <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="rounded-full border border-black/10 bg-white/70 p-3 dark:border-white/10 dark:bg-white/10" aria-label="Toggle theme">{theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}</button>
-<button onClick={() => openAuth("sign-in")} className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white dark:bg-white dark:text-black">Sign In</button>
+            {!signedIn && (
+              <button onClick={() => openAuth("sign-in")} className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white dark:bg-white dark:text-black">Sign In</button>
+            )}
 
             {/* Functional 3-Bar Menu Icon that opens Spotify-style User Profile & Growth Analytics */}
             <button
@@ -378,7 +396,7 @@ export default function Home() {
                   <span className="rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-black">Lifetime Access</span>
                 </div>
                 <h2 className="mt-8 max-w-3xl font-serif text-5xl font-semibold leading-[0.95] tracking-[-0.05em] md:text-7xl">Pay Once. Learn for a Lifetime.</h2>
-                <p className="mt-6 max-w-2xl text-lg leading-8 text-white/75">A founder-led .Gate lifetime membership launch offer curated by Zayd Haji, Founder of .Gate, created for individuals who want their daily screen time to compound into knowledge instead of disappearing into digital noise.</p>
+                <p className="mt-6 max-w-2xl text-lg leading-8 text-white/75">A founder-led • Gate lifetime membership launch offer curated by Zayd Haji, Founder of • Gate, created for individuals who want their daily screen time to compound into knowledge instead of disappearing into digital noise.</p>
 
                 <div className="mt-8 grid gap-4 sm:grid-cols-2">
                   <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 backdrop-blur">
@@ -426,7 +444,7 @@ export default function Home() {
 
               <div className="mt-6 rounded-[2rem] bg-white p-5 text-black">
                 <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#9a6d35]">Founder Led Credibility</p>
-                <p className="mt-3 text-sm leading-7 text-zinc-700">Created by Zayd Haji, Founder of .Gate, this launch offer is designed as a rare long-term investment in intellectual growth across the four pillars of the Gate ecosystem.</p>
+                <p className="mt-3 text-sm leading-7 text-zinc-700">Created by Zayd Haji, Founder of • Gate, this launch offer is designed as a rare long-term investment in intellectual growth across the four pillars of the Gate ecosystem.</p>
               </div>
             </div>
           </div>

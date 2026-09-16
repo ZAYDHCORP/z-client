@@ -31,7 +31,7 @@ export default function AuthScreen({
             Before the world fills your screen, fill your mind with something worth keeping.
           </p>
           <p className="mt-5 text-sm leading-7 text-white/60">
-            One account unlocks the whole .Gate ecosystem — books, podcasts, infographics and
+            One account unlocks the whole • Gate ecosystem — books, podcasts, infographics and
             research across four connected knowledge hubs.
           </p>
         </div>
