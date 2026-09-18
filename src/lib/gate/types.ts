@@ -148,6 +148,7 @@ export interface UserRecord {
   id: string
   name: string
   email: string
+  image?: string | null
   avatarColor: string
   provider: "email" | "google" | "apple"
   verified: boolean

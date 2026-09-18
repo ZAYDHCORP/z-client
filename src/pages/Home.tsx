@@ -2,30 +2,37 @@ import { Logo } from "@/components/Logo";
 import {
   Activity,
   BookOpen,
+  Briefcase,
   Check,
   ChevronRight,
+  Crown,
   Headphones,
   HeartPulse,
+  Home as HomeIcon,
   Image as ImageIcon,
+  LayoutDashboard,
   Menu,
   Moon,
   Pause,
   Play,
   Repeat,
+  Rss,
   Search,
   Share2,
   ShieldCheck,
   Shuffle,
   SkipBack,
   SkipForward,
+  Smartphone,
   Sun,
   User,
   Volume2,
   X,
   FileCode,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { playHeartbeatSound } from "@/components/HeartbeatAudio";
 import GateReader from "@/components/GateReader";
 import BookDetailModal, { BookItemData } from "@/components/BookDetailModal";
@@ -33,17 +40,11 @@ import InfographicFocusedView, {
   InfographicPostData,
 } from "@/components/InfographicFocusedView";
 import PodcastTranscriptModal from "@/components/PodcastTranscriptModal";
-import UserProfileAnalyticsModal from "@/components/UserProfileAnalyticsModal";
 import ServiceLandingModal from "@/components/ServiceLandingModal";
 import { hubs, hubByKey, gateSocials, zSocials } from "@/lib/gate-data";
 import SocialLinks from "@/components/SocialLinks";
 import { Typewriter } from "@/components/TypeWriter";
-import {
-  ClientUser,
-  fetchCurrentUser,
-  getCachedUser,
-  getPostLoginPath,
-} from "@/lib/client-auth";
+import { getCachedUser, getPostLoginPath } from "@/lib/client-auth";
 import {
   PlatformKey,
   platforms,
@@ -58,10 +59,29 @@ import { PlatformLogo } from "@/components/home/PlatformLogo";
 import { SectionTitle, FeedCard, Metric } from "@/components/home/HomeBits";
 import { usePodcastPlayer, formatTime } from "@/hooks/usePodcastPlayer";
 
+const NAV_ICONS: Record<string, typeof HomeIcon> = {
+  Home: HomeIcon,
+  Services: Briefcase,
+  "Gate Feed": Rss,
+  Search: Search,
+  Membership: Crown,
+  Dashboard: LayoutDashboard,
+  "Z Web App": Smartphone,
+};
+
 export default function Home() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { resolvedTheme, setTheme } = useTheme();
   const [active, setActive] = useState<PlatformKey>("IPN");
-  const [user, setUser] = useState<ClientUser | null>(() => getCachedUser());
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuClosing, setMobileMenuClosing] = useState(false);
+  const closeMobileMenu = () => {
+    setMobileMenuClosing(true);
+    window.setTimeout(() => {
+      setMobileMenuOpen(false);
+      setMobileMenuClosing(false);
+    }, 200);
+  };
+  const user = getCachedUser();
   const navigate = useNavigate();
   const signedIn = Boolean(user?.email);
   const userRole: "user" | "admin" = user?.role === "admin" ? "admin" : "user";
@@ -79,7 +99,6 @@ export default function Home() {
     useState<InfographicPostData | null>(null);
   const [readerOpen, setReaderOpen] = useState(false);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
-  const [userProfileModalOpen, setUserProfileModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<{
     hub: (typeof hubs)[number];
     service: (typeof hubs)[number]["services"][number];
@@ -93,6 +112,10 @@ export default function Home() {
           ? "/forgot-password"
           : "/signin";
     navigate(page);
+  };
+
+  const openProfile = () => {
+    navigate(signedIn ? getPostLoginPath(user) : "/signin");
   };
 
   const {
@@ -141,20 +164,26 @@ export default function Home() {
   );
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
-
-  useEffect(() => {
     setSelectedCategory("All");
     setSelectedTag("All");
     setSelectedService(null);
   }, [active]);
 
+  // Show the welcome banner once per signed-in session — sessionStorage (not
+  // a component ref) so it doesn't reset and reappear every time this page
+  // remounts from client-side navigation, only when you actually sign back in.
   useEffect(() => {
-    fetchCurrentUser()
-      .then(setUser)
-      .catch(() => setUser(getCachedUser()));
-  }, []);
+    const key = "gate_welcome_shown_v1";
+    if (!signedIn) {
+      sessionStorage.removeItem(key);
+      return;
+    }
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    setShowWelcome(true);
+    const t = window.setTimeout(() => setShowWelcome(false), 4200);
+    return () => window.clearTimeout(t);
+  }, [signedIn]);
 
   // Synchronized Heartbeat Sound & Logo Reveal on every page load/refresh
   useEffect(() => {
@@ -172,18 +201,6 @@ export default function Home() {
       window.removeEventListener("keydown", triggerHeartbeat);
     };
   }, []);
-
-  // Show the welcome banner the first time a real session is established
-  const welcomeShown = useRef(false);
-  useEffect(() => {
-    if (signedIn && !welcomeShown.current) {
-      welcomeShown.current = true;
-      setShowWelcome(true);
-      const t = window.setTimeout(() => setShowWelcome(false), 4200);
-      return () => window.clearTimeout(t);
-    }
-    if (!signedIn) welcomeShown.current = false;
-  }, [signedIn]);
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#f4f0e8] text-zinc-950 transition-colors duration-500 dark:bg-[#090908] dark:text-[#f6f0e5]">
@@ -221,33 +238,111 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <SocialLinks links={gateSocials} className="hidden lg:flex" />
             <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="rounded-full border border-black/10 bg-white/70 p-3 dark:border-white/10 dark:bg-white/10"
+              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              className="hidden rounded-full border border-black/10 bg-white/70 p-3 dark:border-white/10 dark:bg-white/10 lg:block"
               aria-label="Toggle theme"
             >
-              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             {!signedIn && (
               <button
                 onClick={() => openAuth("sign-in")}
-                className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white dark:bg-white dark:text-black"
+                className="hidden rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white dark:bg-white dark:text-black lg:block"
               >
                 Sign In
               </button>
             )}
 
-            {/* Functional 3-Bar Menu Icon that opens Spotify-style User Profile & Growth Analytics */}
+            {/* Mobile navigation — the nav list above is desktop-only (lg:flex) */}
             <button
-              onClick={() => setUserProfileModalOpen(true)}
-              className="rounded-full border border-black/10 bg-white/70 p-3 hover:bg-black/5 dark:border-white/10 dark:bg-white/10 transition"
-              aria-label="Open User Profile & Analytics"
-              title="Open User Profile & Analytics"
+              onClick={() => setMobileMenuOpen(true)}
+              className="rounded-full border border-black/10 bg-white/70 p-3 hover:bg-black/5 dark:border-white/10 dark:bg-white/10 transition lg:hidden"
+              aria-label="Open menu"
             >
               <Menu size={18} />
             </button>
           </div>
         </div>
       </header>
+
+      {/* Full-screen mobile menu */}
+      {(mobileMenuOpen || mobileMenuClosing) && (
+        <div
+          className={`fixed inset-0 z-[100] flex flex-col bg-[#f4f0e8] text-zinc-950 dark:bg-[#090908] dark:text-[#f6f0e5] lg:hidden ${
+            mobileMenuClosing ? "animate-out fade-out duration-200" : "animate-in fade-in duration-200"
+          }`}
+        >
+          <div className="flex items-center justify-between border-b border-black/10 px-4 py-3 dark:border-white/10">
+            <Logo compact />
+            <button
+              onClick={closeMobileMenu}
+              className="rounded-full border border-black/15 bg-black/5 p-3 transition hover:bg-black/10 dark:border-white/15 dark:bg-white/10 dark:hover:bg-white/15"
+              aria-label="Close menu"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <nav className="flex-1 overflow-y-auto px-4 py-6">
+            {nav.map((item, i) => {
+              const Icon = NAV_ICONS[item] ?? HomeIcon;
+              const itemClass = `flex w-full items-center gap-4 rounded-2xl px-3 py-4 text-left font-serif text-xl font-semibold transition hover:bg-black/5 dark:hover:bg-white/5 ${
+                mobileMenuClosing ? "" : "animate-in fade-in slide-in-from-bottom-2"
+              }`;
+              const itemStyle = mobileMenuClosing ? undefined : { animationDelay: `${i * 40}ms`, animationFillMode: "backwards" as const };
+              return item === "Dashboard" ? (
+                <button
+                  key={item}
+                  onClick={() => {
+                    closeMobileMenu();
+                    navigate(signedIn ? getPostLoginPath(user) : "/signin");
+                  }}
+                  className={itemClass}
+                  style={itemStyle}
+                >
+                  <Icon className="text-[#9a6d35] dark:text-[#d5a85c]" size={22} />
+                  {item}
+                </button>
+              ) : (
+                <a
+                  key={item}
+                  href={`#${item.toLowerCase().replaceAll(" ", "-")}`}
+                  onClick={closeMobileMenu}
+                  className={itemClass}
+                  style={itemStyle}
+                >
+                  <Icon className="text-[#9a6d35] dark:text-[#d5a85c]" size={22} />
+                  {item}
+                </a>
+              );
+            })}
+          </nav>
+          <div
+            className={`space-y-3 border-t border-black/10 px-4 py-6 dark:border-white/10 ${
+              mobileMenuClosing ? "" : "animate-in fade-in slide-in-from-bottom-2"
+            }`}
+            style={mobileMenuClosing ? undefined : { animationDelay: `${nav.length * 40}ms`, animationFillMode: "backwards" }}
+          >
+            <button
+              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              className="flex w-full items-center justify-center gap-2 rounded-full border border-black/15 bg-black/5 px-5 py-3.5 text-sm font-bold transition hover:bg-black/10 dark:border-white/15 dark:bg-white/5 dark:hover:bg-white/10"
+            >
+              {resolvedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+              {resolvedTheme === "dark" ? "Light mode" : "Dark mode"}
+            </button>
+            {!signedIn && (
+              <button
+                onClick={() => {
+                  closeMobileMenu();
+                  openAuth("sign-in");
+                }}
+                className="w-full rounded-full bg-zinc-950 px-5 py-3.5 text-sm font-bold text-white transition hover:opacity-90 dark:bg-white dark:text-black"
+              >
+                Sign In
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <section
         id="home"
@@ -260,7 +355,7 @@ export default function Home() {
           <div className="mb-6">
             <Logo />
           </div>
-          <h1 className="max-w-4xl text-5xl font-semibold leading-[.95] tracking-[-0.05em] md:text-7xl">
+          <h1 className="max-w-4xl text-4xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-5xl sm:leading-[.95] sm:tracking-[-0.05em] md:text-6xl lg:text-7xl">
             One premium knowledge ecosystem for IPN, IGC, IFR and ISR.
           </h1>
           <div className="mt-7 max-w-3xl rounded-[2rem] border border-black/10 bg-white/55 p-6 shadow-xl shadow-black/5 backdrop-blur dark:border-white/10 dark:bg-white/5">
@@ -947,6 +1042,7 @@ export default function Home() {
         </div>
       </section>
 
+      {!signedIn && (
       <section id="dashboard" className="mx-auto max-w-7xl px-4 py-14">
         <div className="max-w-3xl">
           <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#9a6d35]">
@@ -982,7 +1078,7 @@ export default function Home() {
           <div className="mt-7 flex flex-wrap gap-3">
             {signedIn ? (
               <button
-                onClick={() => setUserProfileModalOpen(true)}
+                onClick={openProfile}
                 className="rounded-full bg-zinc-950 px-7 py-4 text-center font-bold text-white shadow-xl transition hover:opacity-90 dark:bg-white dark:text-black"
               >
                 View My Profile
@@ -996,7 +1092,7 @@ export default function Home() {
               </button>
             )}
             <button
-              onClick={() => setUserProfileModalOpen(true)}
+              onClick={openProfile}
               className="rounded-full border border-black/15 bg-white/60 px-7 py-4 text-center font-bold transition hover:bg-black hover:text-white dark:border-white/15 dark:bg-white/10 dark:hover:bg-white dark:hover:text-black"
             >
               Open Profile & Analytics
@@ -1022,7 +1118,7 @@ export default function Home() {
             </div>
             <div className="mt-6 grid gap-3">
               <button
-                onClick={() => setUserProfileModalOpen(true)}
+                onClick={openProfile}
                 className="flex items-center justify-between rounded-2xl bg-black/5 hover:bg-black/10 p-3 font-semibold transition dark:bg-white/10 dark:hover:bg-white/20"
               >
                 <span>View & Edit Full Profile</span> <ChevronRight size={18} />
@@ -1063,6 +1159,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       <section className="mx-auto max-w-7xl px-4 py-14">
         <SectionTitle
@@ -1454,18 +1551,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* User Profile & Growth Analytics Modal (Opened via 3-bar menu) */}
-      {userProfileModalOpen && (
-        <UserProfileAnalyticsModal
-          userName={userName}
-          userEmail={
-            user?.email ??
-            `${userName.toLowerCase().replaceAll(" ", "")}@drzgate.com`
-          }
-          userRole={userRole}
-          onClose={() => setUserProfileModalOpen(false)}
-        />
-      )}
 
       {/* Podcast Interactive Transcript Modal */}
       {transcriptOpen && nowPlaying && (
@@ -1521,9 +1606,28 @@ export default function Home() {
               Gate. Learn. Discover. Grow.
             </p>
           </div>
-          <SocialLinks links={gateSocials} />
+          <div className="flex flex-wrap items-center gap-4">
+            <SocialLinks links={gateSocials} />
+            {!signedIn && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => openAuth("sign-in")}
+                  className="rounded-full border border-black/15 bg-white/60 px-5 py-2.5 text-sm font-bold transition hover:bg-black hover:text-white dark:border-white/15 dark:bg-white/10 dark:hover:bg-white dark:hover:text-black"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => openAuth("sign-up")}
+                  className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-bold text-white transition hover:opacity-90 dark:bg-white dark:text-black"
+                >
+                  Sign Up
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </footer>
+
       {showWelcome && (
         <div className="fixed right-4 top-24 z-[70] flex items-center gap-3 rounded-3xl border border-black/10 bg-white/95 p-4 shadow-2xl shadow-black/15 animate-in fade-in slide-in-from-top-3 dark:border-white/10 dark:bg-zinc-950/95">
           <Logo compact />

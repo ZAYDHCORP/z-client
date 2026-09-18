@@ -102,20 +102,3 @@ export function parseUserResponse(payload: unknown): ClientUser | null {
       typeof source.twoFactorEnabled === "boolean" ? source.twoFactorEnabled : undefined,
   };
 }
-
-/**
- * Fetches the current user's profile from the backend (cookie-authenticated),
- * updates the local cache, and returns the user.
- * Throws on network / auth failure so callers can fall back to getCachedUser().
- */
-export async function fetchCurrentUser(): Promise<ClientUser> {
-  // Lazy-import to avoid circular deps and keep this file framework-agnostic
-  const { api } = await import("@/lib/axios");
-  const { API } = await import("@/lib/constants");
-
-  const res = await api.get(API.AUTH.PROFILE);
-  const user = parseUserResponse(res.data?.data ?? res.data);
-  if (!user) throw new Error("Profile response did not contain a user record.");
-  cacheUser(user);
-  return user;
-}

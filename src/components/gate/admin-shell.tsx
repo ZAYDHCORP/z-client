@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, Link } from "react-router-dom"
-import { ThemeProvider, useTheme } from "next-themes"
+import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import {
   Activity,
@@ -11,6 +11,7 @@ import {
   BookOpen,
   Boxes,
   CalendarClock,
+  User,
   Folder,
   CreditCard,
   Database,
@@ -28,6 +29,7 @@ import {
   Mic,
   Moon,
   Music,
+  LogOut,
   Newspaper,
   PanelLeft,
   PieChart,
@@ -72,7 +74,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getCachedUser, logoutCurrentUser } from "@/lib/client-auth"
 
 interface NavItem {
@@ -242,13 +244,15 @@ function SidebarContent({ pathname, onNav }: { pathname: string; onNav?: () => v
                     to={item.href}
                     onClick={onNav}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors",
+                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                       active
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-accent hover:text-foreground",
                     )}
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
+                    <item.icon
+                      className={cn("h-4 w-4 shrink-0", !active && "text-[#9a6d35] dark:text-[#d5a85c]")}
+                    />
                     <span className="truncate">{item.label}</span>
                   </Link>
                 )
@@ -274,8 +278,13 @@ function AdminIdentity() {
     .join("") || "A"
 
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-accent/60 px-3 py-2">
+    <Link
+      to="/admin/profile"
+      className="flex items-center gap-2 rounded-lg bg-accent/60 px-3 py-2 transition hover:bg-accent"
+      title="View your profile"
+    >
       <Avatar className="h-8 w-8">
+        {user?.image && <AvatarImage src={user.image} alt={name} />}
         <AvatarFallback className="bg-primary text-primary-foreground text-xs">
           {initials}
         </AvatarFallback>
@@ -284,7 +293,7 @@ function AdminIdentity() {
         <p className="truncate text-sm font-medium">{name}</p>
         <p className="truncate text-xs text-muted-foreground">{user?.email ?? "Super Admin"}</p>
       </div>
-    </div>
+    </Link>
   )
 }
 
@@ -368,6 +377,12 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
             </div>
           </form>
 
+          <Button variant="ghost" size="icon" className="h-9 w-9" asChild title="View site">
+            <Link to="/">
+              <Globe className="h-5 w-5" />
+            </Link>
+          </Button>
+
           <ThemeToggle />
 
           <DropdownMenu>
@@ -392,13 +407,24 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
               <DropdownMenuLabel>Admin</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/admin/settings">Settings</Link>
+                <Link to="/admin/profile">
+                  <User className="mr-2 h-4 w-4" /> Profile
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/admin/security">Security</Link>
+                <Link to="/admin/settings">
+                  <Settings className="mr-2 h-4 w-4" /> Settings
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/admin/audit-logs">Audit Logs</Link>
+                <Link to="/admin/security">
+                  <Lock className="mr-2 h-4 w-4" /> Security
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/admin/audit-logs">
+                  <Activity className="mr-2 h-4 w-4" /> Audit Logs
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -407,7 +433,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
                   navigate("/");
                 }}
               >
-                Sign out
+                <LogOut className="mr-2 h-4 w-4" /> Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -449,15 +475,8 @@ function SystemHealthMini() {
 export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <StoreProvider>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
-        <AdminShellInner>{children}</AdminShellInner>
-        <Toaster richColors position="top-right" />
-      </ThemeProvider>
+      <AdminShellInner>{children}</AdminShellInner>
+      <Toaster richColors position="top-right" />
     </StoreProvider>
   )
 }

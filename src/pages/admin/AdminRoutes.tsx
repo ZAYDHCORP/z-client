@@ -4,6 +4,7 @@ import AdminLayout from "@/pages/admin/layout";
 import TheocentricLayout from "@/pages/admin/theocentric/layout";
 import DoxologyLayout from "@/pages/admin/doxology/layout";
 import AdminOverview from "@/pages/admin/page";
+import AdminProfile from "@/pages/admin/profile/page";
 import AdminAnalytics from "@/pages/admin/analytics/page";
 import AdminApiManagement from "@/pages/admin/api-management/page";
 import AdminAuditLogs from "@/pages/admin/audit-logs/page";
@@ -78,6 +79,7 @@ export default function AdminRoutes() {
         }
       >
         <Route index element={<AdminOverview />} />
+        <Route path="profile" element={<AdminProfile />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="api-management" element={<AdminApiManagement />} />
         <Route path="audit-logs" element={<AdminAuditLogs />} />

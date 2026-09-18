@@ -10,7 +10,6 @@ export const API = {
     REFRESH_TOKEN: `${BASE}/auth/refresh-token`,
     GOOGLE_LOGIN: `${BASE}/auth/google`,
     GOOGLE_CALLBACK: `${BASE}/auth/google/callback`,
-    PROFILE: `${BASE}/auth/profile`,
     SETUP_2FA: `${BASE}/auth/2fa/setup`,
     VERIFY_SETUP_2FA: `${BASE}/auth/2fa/verify-setup`,
     VERIFY_LOGIN_2FA: `${BASE}/auth/2fa/verify-login`,

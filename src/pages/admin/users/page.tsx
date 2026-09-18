@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function UsersPage() {
   const { data, updateUser, removeUser, ensureUsersLoaded, loadMore, hasMore, isResourceLoading } = useGate()
@@ -108,6 +108,7 @@ export default function UsersPage() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-9 w-9">
+                      {u.image && <AvatarImage src={u.image} alt={u.name} />}
                       <AvatarFallback style={{ background: u.avatarColor }} className="text-white text-xs">
                         {u.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                       </AvatarFallback>

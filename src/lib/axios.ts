@@ -81,9 +81,17 @@ api.interceptors.response.use(
       return Promise.reject({ message: "Request timed out." });
     }
 
-    // Skip refresh for public endpoints
+    // Skip refresh for public endpoints (login, register, etc.) — a 401/422
+    // here means bad credentials or invalid input, not an expired session.
+    // Still normalize the rejection so the real backend message (e.g.
+    // "Invalid password") reaches the UI instead of Axios's generic
+    // "Request failed with status code 401".
     if (isPublicEndpoint(originalRequest?.url)) {
-      return Promise.reject(error);
+      return Promise.reject({
+        status: error.response.status,
+        message: error.response.data?.message || error.message || "Something went wrong",
+        data: error.response.data,
+      });
     }
 
     // Handle expired access token

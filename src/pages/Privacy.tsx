@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
+import { Logo } from "@/components/Logo";
 
 export default function PrivacyPage() {
   return (
     <main className="min-h-screen bg-[#f4f0e8] text-zinc-950 dark:bg-[#090908] dark:text-[#f6f0e5]">
       <div className="mx-auto max-w-2xl px-5 py-12">
-        <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-[#9a6d35]">
-          <span className="gate-dot heartbeat" />
-          <span className="text-2xl gate-wordmark">Gate</span>
+        <Link to="/" className="mb-8 inline-block">
+          <Logo compact />
         </Link>
         <h1 className="font-serif text-3xl font-semibold tracking-tight">Privacy Policy</h1>
         <p className="mt-2 text-sm text-zinc-500">Last updated: August 2026</p>
