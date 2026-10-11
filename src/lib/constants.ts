@@ -36,27 +36,35 @@ export const API = {
     TAXONOMY_TOPICS: `${BASE}/admin/taxonomy/topics`,
     TAXONOMY_TOPIC_BY_ID: (id: string) => `${BASE}/admin/taxonomy/topics/${id}`,
     TAXONOMY_REGIONS: `${BASE}/admin/taxonomy/regions`,
-    TAXONOMY_REGION_BY_ID: (id: string) => `${BASE}/admin/taxonomy/regions/${id}`,
+    TAXONOMY_REGION_BY_ID: (id: string) =>
+      `${BASE}/admin/taxonomy/regions/${id}`,
     TAXONOMY_TAGS: `${BASE}/admin/taxonomy/tags`,
     TAXONOMY_TAG_BY_ID: (id: string) => `${BASE}/admin/taxonomy/tags/${id}`,
     TAXONOMY_CATEGORIES: `${BASE}/admin/taxonomy/categories`,
-    TAXONOMY_CATEGORY_BY_ID: (id: string) => `${BASE}/admin/taxonomy/categories/${id}`,
+    TAXONOMY_CATEGORY_BY_ID: (id: string) =>
+      `${BASE}/admin/taxonomy/categories/${id}`,
 
     OPERATIONS_RSS_FEEDS: `${BASE}/admin/operations/rss-feeds`,
-    OPERATIONS_RSS_FEED_BY_ID: (id: string) => `${BASE}/admin/operations/rss-feeds/${id}`,
-    OPERATIONS_RSS_FEED_SYNC: (id: string) => `${BASE}/admin/operations/rss-feeds/${id}/sync`,
+    OPERATIONS_RSS_FEED_BY_ID: (id: string) =>
+      `${BASE}/admin/operations/rss-feeds/${id}`,
+    OPERATIONS_RSS_FEED_SYNC: (id: string) =>
+      `${BASE}/admin/operations/rss-feeds/${id}/sync`,
     OPERATIONS_MEDIA: `${BASE}/admin/operations/media`,
-    OPERATIONS_MEDIA_BY_ID: (id: string) => `${BASE}/admin/operations/media/${id}`,
+    OPERATIONS_MEDIA_BY_ID: (id: string) =>
+      `${BASE}/admin/operations/media/${id}`,
     OPERATIONS_SOCIAL_LINKS: `${BASE}/admin/operations/social-links`,
-    OPERATIONS_SOCIAL_LINK_BY_ID: (id: string) => `${BASE}/admin/operations/social-links/${id}`,
+    OPERATIONS_SOCIAL_LINK_BY_ID: (id: string) =>
+      `${BASE}/admin/operations/social-links/${id}`,
     OPERATIONS_SERVICES: `${BASE}/admin/operations/services`,
-    OPERATIONS_SERVICE_BY_ID: (id: string) => `${BASE}/admin/operations/services/${id}`,
+    OPERATIONS_SERVICE_BY_ID: (id: string) =>
+      `${BASE}/admin/operations/services/${id}`,
 
     // Memberships — plans are editable; payments are read-only reporting.
     // (Checkout and webhook endpoints are intentionally NOT defined here —
     // payment flows must never be reachable from the admin browser.)
     MEMBERSHIP_PLANS: `${BASE}/admin/memberships/plans`,
-    MEMBERSHIP_PLAN_BY_ID: (id: string) => `${BASE}/admin/memberships/plans/${id}`,
+    MEMBERSHIP_PLAN_BY_ID: (id: string) =>
+      `${BASE}/admin/memberships/plans/${id}`,
     MEMBERSHIP_PAYMENTS: `${BASE}/admin/memberships/payments`,
     MEMBERSHIP_PAYMENTS_STATS: `${BASE}/admin/memberships/payments/stats`,
 
@@ -65,27 +73,38 @@ export const API = {
     // (`theocentric`) — the full-test-suite doc lists everything under
     // `theocentric`, but the deployed routes differ.
     THEO_CATEGORIES: `${BASE}/admin/theocentricTaxonomy/categories`,
-    THEO_CATEGORY_BY_ID: (id: string) => `${BASE}/admin/theocentricTaxonomy/categories/${id}`,
+    THEO_CATEGORY_BY_ID: (id: string) =>
+      `${BASE}/admin/theocentricTaxonomy/categories/${id}`,
     THEO_SUBCATEGORIES: `${BASE}/admin/theocentricTaxonomy/subcategories`,
-    THEO_SUBCATEGORY_BY_ID: (id: string) => `${BASE}/admin/theocentricTaxonomy/subcategories/${id}`,
+    THEO_SUBCATEGORY_BY_ID: (id: string) =>
+      `${BASE}/admin/theocentricTaxonomy/subcategories/${id}`,
     THEO_TAGS: `${BASE}/admin/theocentricTaxonomy/tags`,
-    THEO_TAG_BY_ID: (id: string) => `${BASE}/admin/theocentricTaxonomy/tags/${id}`,
+    THEO_TAG_BY_ID: (id: string) =>
+      `${BASE}/admin/theocentricTaxonomy/tags/${id}`,
     THEO_REFERENCES: `${BASE}/admin/theocentricTaxonomy/references`,
-    THEO_REFERENCE_BY_ID: (id: string) => `${BASE}/admin/theocentricTaxonomy/references/${id}`,
+    THEO_REFERENCE_BY_ID: (id: string) =>
+      `${BASE}/admin/theocentricTaxonomy/references/${id}`,
     THEO_CONTENT: `${BASE}/admin/theocentric/content`,
-    THEO_CONTENT_BY_ID: (id: string) => `${BASE}/admin/theocentric/content/${id}`,
-    THEO_CONTENT_STATUS: (id: string) => `${BASE}/admin/theocentric/content/${id}/status`,
-    THEO_CONTENT_VERIFICATION: (id: string) => `${BASE}/admin/theocentric/content/${id}/verification`,
-    THEO_CONTENT_FEATURED: (id: string) => `${BASE}/admin/theocentric/content/${id}/featured`,
-    THEO_CONTENT_DUPLICATE: (id: string) => `${BASE}/admin/theocentric/content/${id}/duplicate`,
+    THEO_CONTENT_BY_ID: (id: string) =>
+      `${BASE}/admin/theocentric/content/${id}`,
+    THEO_CONTENT_STATUS: (id: string) =>
+      `${BASE}/admin/theocentric/content/${id}/status`,
+    THEO_CONTENT_VERIFICATION: (id: string) =>
+      `${BASE}/admin/theocentric/content/${id}/verification`,
+    THEO_CONTENT_FEATURED: (id: string) =>
+      `${BASE}/admin/theocentric/content/${id}/featured`,
+    THEO_CONTENT_DUPLICATE: (id: string) =>
+      `${BASE}/admin/theocentric/content/${id}/duplicate`,
     THEO_CONTENT_REORDER: `${BASE}/admin/theocentric/content/reorder`,
     THEO_COLLECTIONS: `${BASE}/admin/theocentric/collections`,
-    THEO_COLLECTION_BY_ID: (id: string) => `${BASE}/admin/theocentric/collections/${id}`,
+    THEO_COLLECTION_BY_ID: (id: string) =>
+      `${BASE}/admin/theocentric/collections/${id}`,
     THEO_MILESTONES: `${BASE}/admin/theocentric/milestones`,
-    THEO_MILESTONE_BY_ID: (id: string) => `${BASE}/admin/theocentric/milestones/${id}`,
-    THEO_JOURNEY: `${BASE}/admin/theocentric/journey`,
-    THEO_AFTER_SALAH: `${BASE}/admin/theocentric/after-salah`,
-    THEO_SETTINGS: `${BASE}/admin/theocentric/settings`,
+    THEO_MILESTONE_BY_ID: (id: string) =>
+      `${BASE}/admin/theocentric/milestones/${id}`,
+    THEO_JOURNEY: `${BASE}/admin/theocentric/singletons/journey`,
+    THEO_AFTER_SALAH: `${BASE}/admin/theocentric/singletons/after-salah`,
+    THEO_SETTINGS: `${BASE}/admin/theocentric/singletons/settings`,
   },
   PODCASTS: `${BASE}/podcasts`,
 } as const;

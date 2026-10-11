@@ -1,27 +1,27 @@
-import { useEffect, useState, type ChangeEvent } from "react"
-import { toast } from "sonner"
-import { Copy, Eye, Star, Trash2, Archive, Upload } from "lucide-react"
+import { useEffect, useState, type ChangeEvent } from "react";
+import { toast } from "sonner";
+import { Copy, Eye, Star, Trash2, Archive, Upload } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { useGate } from "@/lib/gate/store"
-import { PLATFORMS } from "@/lib/gate/platforms"
+} from "@/components/ui/select";
+import { useGate } from "@/lib/gate/store";
+import { PLATFORMS } from "@/lib/gate/platforms";
 import type {
   AnyContent,
   BookContent,
@@ -31,27 +31,32 @@ import type {
   PodcastEpisode,
   ResearchContent,
   SeoAeo,
-} from "@/lib/gate/types"
-import { StatusBadge } from "./ui"
+} from "@/lib/gate/types";
+import { StatusBadge } from "./ui";
 
 function readImageAsDataUrl(file: File, onLoaded: (dataUrl: string) => void) {
-  const reader = new FileReader()
-  reader.onload = () => onLoaded(reader.result as string)
-  reader.readAsDataURL(file)
+  const reader = new FileReader();
+  reader.onload = () => onLoaded(reader.result as string);
+  reader.readAsDataURL(file);
 }
 
 function ImageUploadButton({ onFile }: { onFile: (file: File) => void }) {
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) onFile(file)
-    e.target.value = ""
+    const file = e.target.files?.[0];
+    if (file) onFile(file);
+    e.target.value = "";
   }
   return (
     <label className="mt-2 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-xs hover:bg-accent/40">
       <Upload className="h-3.5 w-3.5" /> Upload image
-      <input type="file" accept="image/*" className="hidden" onChange={handleChange} />
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleChange}
+      />
     </label>
-  )
+  );
 }
 
 function emptySeo(title: string, slug: string): SeoAeo {
@@ -69,7 +74,7 @@ function emptySeo(title: string, slug: string): SeoAeo {
     robots: "index,follow",
     aeoSummary: "",
     faq: [],
-  }
+  };
 }
 
 function makeEmpty(type: ContentType): AnyContent {
@@ -95,7 +100,7 @@ function makeEmpty(type: ContentType): AnyContent {
     description: "",
     seo: emptySeo("", ""),
     feedPlacement: "default" as const,
-  }
+  };
   if (type === "book" || type === "research") {
     return {
       ...base,
@@ -113,10 +118,10 @@ function makeEmpty(type: ContentType): AnyContent {
       },
       freeSampleEnabled: false,
       freeSamplePdf: "",
-    } as BookContent | ResearchContent
+    } as BookContent | ResearchContent;
   }
   if (type === "infographic") {
-    return { ...base, image: "", caption: "" } as InfographicContent
+    return { ...base, image: "", caption: "" } as InfographicContent;
   }
   return {
     ...base,
@@ -130,7 +135,7 @@ function makeEmpty(type: ContentType): AnyContent {
     originalDescription: "",
     feedId: "",
     explicit: false,
-  } as PodcastEpisode
+  } as PodcastEpisode;
 }
 
 export function ContentEditor({
@@ -139,71 +144,71 @@ export function ContentEditor({
   open,
   onOpenChange,
 }: {
-  type: ContentType
-  item: AnyContent | null
-  open: boolean
-  onOpenChange: (v: boolean) => void
+  type: ContentType;
+  item: AnyContent | null;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
 }) {
-  const { data, addContent, updateContent } = useGate()
+  const { data, addContent, updateContent } = useGate();
   const [form, setForm] = useState<AnyContent>(() =>
     item ? structuredClone(item) : makeEmpty(type),
-  )
-  const [seoOpen, setSeoOpen] = useState(false)
+  );
+  const [seoOpen, setSeoOpen] = useState(false);
 
   useEffect(() => {
-    if (open) setForm(item ? structuredClone(item) : makeEmpty(type))
-  }, [open, item, type])
+    if (open) setForm(item ? structuredClone(item) : makeEmpty(type));
+  }, [open, item, type]);
 
-  const set = (patch: any) => setForm((f) => ({ ...f, ...patch }))
+  const set = (patch: any) => setForm((f) => ({ ...f, ...patch }));
   const setSeo = (patch: any) =>
-    setForm((f) => ({ ...f, seo: { ...f.seo, ...patch } }))
+    setForm((f) => ({ ...f, seo: { ...f.seo, ...patch } }));
 
   const labels: Record<ContentType, string> = {
     book: "Book",
     infographic: "Infographic",
     podcast: "Podcast Episode",
     research: "Research Report",
-  }
+  };
 
   function save() {
     if (!form.title.trim()) {
-      toast.error("Title is required")
-      return
+      toast.error("Title is required");
+      return;
     }
     const slug =
       form.slug.trim() ||
       form.title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "")
-    const finalForm = { ...form, slug, seo: { ...form.seo, slug } }
+        .replace(/(^-|-$)/g, "");
+    const finalForm = { ...form, slug, seo: { ...form.seo, slug } };
     if (item) {
-      updateContent(item.id, finalForm)
-      toast.success(`${labels[type]} updated`)
+      updateContent(item.id, finalForm);
+      toast.success(`${labels[type]} updated`);
     } else {
-      addContent(finalForm)
-      toast.success(`${labels[type]} created as ${finalForm.status}`)
+      addContent(finalForm);
+      toast.success(`${labels[type]} created as ${finalForm.status}`);
     }
-    onOpenChange(false)
+    onOpenChange(false);
   }
 
   const catOptions = data.categories.filter(
     (c) => c.platform === form.platform || c.platform === "ALL",
-  )
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-       <DialogContent className="flex max-h-[90vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
-         <DialogHeader className="shrink-0 space-y-1 border-b border-border px-6 py-4 text-left">
-           <DialogTitle>
-             {item ? `Edit ${labels[type]}` : `New ${labels[type]}`}
-           </DialogTitle>
-           <DialogDescription>
-             Complete the fields below. Save as draft, then publish when ready.
-           </DialogDescription>
-         </DialogHeader>
+      <DialogContent className="flex max-h-[90vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+        <DialogHeader className="shrink-0 space-y-1 border-b border-border px-6 py-4 text-left">
+          <DialogTitle>
+            {item ? `Edit ${labels[type]}` : `New ${labels[type]}`}
+          </DialogTitle>
+          <DialogDescription>
+            Complete the fields below. Save as draft, then publish when ready.
+          </DialogDescription>
+        </DialogHeader>
 
-         <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
+        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
           {/* Media + preview */}
           {(type === "book" || type === "research") && (
             <div className="flex gap-4">
@@ -353,7 +358,9 @@ export function ContentEditor({
                     type="number"
                     value={(form as PodcastEpisode).season ?? 1}
                     onChange={(e) =>
-                      set({ season: Number(e.target.value) } as Partial<AnyContent>)
+                      set({
+                        season: Number(e.target.value),
+                      } as Partial<AnyContent>)
                     }
                   />
                 </Field>
@@ -425,13 +432,17 @@ export function ContentEditor({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {["draft", "scheduled", "published", "unpublished", "archived"].map(
-                    (s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ),
-                  )}
+                  {[
+                    "draft",
+                    "scheduled",
+                    "published",
+                    "unpublished",
+                    "archived",
+                  ].map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </Field>
@@ -509,7 +520,9 @@ export function ContentEditor({
                   placeholder="Free Sample PDF URL"
                   value={(form as BookContent).freeSamplePdf ?? ""}
                   onChange={(e) =>
-                    set({ freeSamplePdf: e.target.value } as Partial<AnyContent>)
+                    set({
+                      freeSamplePdf: e.target.value,
+                    } as Partial<AnyContent>)
                   }
                 />
               )}
@@ -608,7 +621,9 @@ export function ContentEditor({
                 <Field label="Meta Description">
                   <Textarea
                     value={form.seo.metaDescription}
-                    onChange={(e) => setSeo({ metaDescription: e.target.value })}
+                    onChange={(e) =>
+                      setSeo({ metaDescription: e.target.value })
+                    }
                     rows={2}
                   />
                 </Field>
@@ -676,20 +691,20 @@ export function ContentEditor({
           </div>
         </div>
 
-         <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border px-6 py-4">
-           <StatusBadge status={form.status} />
-           <div className="flex gap-2">
-             <Button variant="outline" onClick={() => onOpenChange(false)}>
-               Cancel
-             </Button>
-             <Button onClick={save}>
-               {item ? "Save Changes" : "Create Draft"}
-             </Button>
-           </div>
-         </div>
-       </DialogContent>
+        <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border px-6 py-4">
+          <StatusBadge status={form.status} />
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={save}>
+              {item ? "Save Changes" : "Create Draft"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function Field({
@@ -697,9 +712,9 @@ function Field({
   children,
   inline,
 }: {
-  label: string
-  children: React.ReactNode
-  inline?: boolean
+  label: string;
+  children: React.ReactNode;
+  inline?: boolean;
 }) {
   return (
     <div className={inline ? "flex items-center gap-2" : "space-y-1.5"}>
@@ -708,7 +723,7 @@ function Field({
       </Label>
       {children}
     </div>
-  )
+  );
 }
 
 function PurchaseLinksEditor({
@@ -716,23 +731,24 @@ function PurchaseLinksEditor({
   onChange,
   researchOnly,
 }: {
-  value: BookContent["purchaseLinks"]
-  onChange: (v: BookContent["purchaseLinks"]) => void
-  researchOnly?: boolean
+  value: BookContent["purchaseLinks"];
+  onChange: (v: BookContent["purchaseLinks"]) => void;
+  researchOnly?: boolean;
 }) {
-  const keys: { key: keyof BookContent["purchaseLinks"]; label: string }[] = researchOnly
-    ? [
-        { key: "googlePlayBooks", label: "Google Play Books" },
-        { key: "other", label: "Other Purchase Link" },
-      ]
-    : [
-        { key: "paperback", label: "Paperback" },
-        { key: "ebook", label: "eBook" },
-        { key: "amazon", label: "Amazon" },
-        { key: "notionPress", label: "Notion Press" },
-        { key: "googlePlayBooks", label: "Google Play Books" },
-        { key: "other", label: "Other Purchase Link" },
-      ]
+  const keys: { key: keyof BookContent["purchaseLinks"]; label: string }[] =
+    researchOnly
+      ? [
+          { key: "googlePlayBooks", label: "Google Play Books" },
+          { key: "other", label: "Other Purchase Link" },
+        ]
+      : [
+          { key: "paperback", label: "Paperback" },
+          { key: "ebook", label: "eBook" },
+          { key: "amazon", label: "Amazon" },
+          { key: "notionPress", label: "Notion Press" },
+          { key: "googlePlayBooks", label: "Google Play Books" },
+          { key: "other", label: "Other Purchase Link" },
+        ];
   return (
     <div className="rounded-lg border border-border p-3">
       <p className="mb-2 text-sm font-medium">Purchase & Affiliate Links</p>
@@ -761,5 +777,5 @@ function PurchaseLinksEditor({
         ))}
       </div>
     </div>
-  )
+  );
 }

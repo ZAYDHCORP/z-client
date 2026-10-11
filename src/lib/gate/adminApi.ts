@@ -301,6 +301,7 @@ export const adminApi = {
     },
   },
   content: {
+    count: (filters: Filters = {}) => count(withFilters(API.ADMIN.CONTENT, filters)),
     list: <T>(page = 1) => list<T>(API.ADMIN.CONTENT, "content", page),
     get: <T>(id: string) => getOne<T>(API.ADMIN.CONTENT_BY_ID(id)),
     create: <T>(body: unknown) => createOne<T>(API.ADMIN.CONTENT, body),
@@ -318,6 +319,7 @@ export const adminApi = {
     ) => patch<T>(API.ADMIN.CONTENT_STATUS(id), { status, ...extra }),
   },
   users: {
+    count: (filters: Filters = {}) => count(withFilters(API.ADMIN.USERS, filters)),
     list: <T>(page = 1) => list<T>(API.ADMIN.USERS, "users", page),
     get: <T>(id: string) => getOne<T>(API.ADMIN.USER_BY_ID(id)),
     update: <T>(id: string, body: unknown) =>
