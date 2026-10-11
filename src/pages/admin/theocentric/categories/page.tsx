@@ -1,6 +1,6 @@
 import { CrudTable } from "@/components/gate/crud-table"
 import { StatusBadge } from "@/components/gate/ui"
-import { useTheo } from "@/lib/gate/theocentric/store"
+import { useTheo, useTheoLoad } from "@/lib/gate/theocentric/store"
 import type { PublicationStatus, TheoCategory } from "@/lib/gate/theocentric/types"
 
 const statusOpts: { value: PublicationStatus; label: string }[] = [
@@ -11,9 +11,13 @@ const statusOpts: { value: PublicationStatus; label: string }[] = [
 ]
 
 export default function TheoCategoriesPage() {
-  const { data, addCategory, updateCategory, removeCategory } = useTheo()
+  const { data, addCategory, updateCategory, removeCategory, loadMore, hasMore, isLoading } = useTheo()
+  useTheoLoad("categories")
   return (
     <CrudTable
+      onLoadMore={() => loadMore("categories")}
+      hasMore={hasMore("categories")}
+      loadingMore={isLoading("categories")}
       title="Categories"
       description="Top-level spiritual categories. Add new ones anytime — the CMS is dynamic."
       rows={data.categories}

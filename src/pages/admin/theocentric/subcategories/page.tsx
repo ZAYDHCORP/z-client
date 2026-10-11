@@ -1,11 +1,15 @@
 import { CrudTable } from "@/components/gate/crud-table"
-import { useTheo } from "@/lib/gate/theocentric/store"
+import { useTheo, useTheoLoad } from "@/lib/gate/theocentric/store"
 import type { TheoSubcategory } from "@/lib/gate/theocentric/types"
 
 export default function TheoSubcategoriesPage() {
-  const { data, addSubcategory, updateSubcategory, removeSubcategory } = useTheo()
+  const { data, addSubcategory, updateSubcategory, removeSubcategory, loadMore, hasMore, isLoading } = useTheo()
+  useTheoLoad("subcategories", "categories")
   return (
     <CrudTable
+      onLoadMore={() => loadMore("subcategories")}
+      hasMore={hasMore("subcategories")}
+      loadingMore={isLoading("subcategories")}
       title="Subcategories"
       description="Nest finer groupings under a parent category."
       rows={data.subcategories}

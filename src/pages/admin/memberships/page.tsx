@@ -1,36 +1,70 @@
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { IndianRupee, TrendingUp, Users, RefreshCw } from "lucide-react"
+import { IndianRupee, TrendingUp, Users, Layers } from "lucide-react"
 import { PageHeader, StatCard } from "@/components/gate/ui"
 import { useGate } from "@/lib/gate/store"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
-export default function MembershipsPage() {
-  const { data, updatePlan } = useGate()
-  const plans = data.membershipPlans
+/** Price field that only saves on blur / Enter — never a request per keystroke. */
+function PriceInput({ value, onCommit }: { value: number; onCommit: (n: number) => void }) {
+  const [draft, setDraft] = useState(String(value))
+  useEffect(() => setDraft(String(value)), [value])
 
-  const subs = data.payments.filter((p) => p.status === "success" && p.membershipType === "subscription").length
-  const lifetime = data.payments.filter((p) => p.membershipType === "lifetime" && p.status === "success").length
-  const renewals = data.payments.filter((p) => p.status === "success").length
+  const commit = () => {
+    const n = Number(draft)
+    if (!Number.isFinite(n) || n <= 0) {
+      toast.error("Price must be a positive number")
+      setDraft(String(value))
+      return
+    }
+    if (n !== value) onCommit(n)
+  }
+
+  return (
+    <Input
+      type="number"
+      min={1}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
+    />
+  )
+}
+
+export default function MembershipsPage() {
+  const { data, updatePlan, ensurePlansLoaded, ensurePaymentsLoaded, isResourceLoading } = useGate()
+  const plans = data.membershipPlans
+  const stats = data.paymentStats
+
+  useEffect(() => {
+    ensurePlansLoaded()
+    ensurePaymentsLoaded()
+  }, [ensurePlansLoaded, ensurePaymentsLoaded])
 
   return (
     <div>
       <PageHeader
         title="Memberships"
         description="Manage the unified Gate Membership — six subscription plans plus the one-time Lifetime offer."
-        actions={<Button variant="outline" onClick={() => toast.success("Exchange rates refreshed")}>Refresh Rates</Button>}
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Active Subscriptions" value={subs} icon={<Users className="h-4 w-4" />} accent="#10b981" />
-        <StatCard label="Lifetime Members" value={lifetime} icon={<TrendingUp className="h-4 w-4" />} accent="#8b5cf6" />
-        <StatCard label="Renewals" value={renewals} icon={<RefreshCw className="h-4 w-4" />} accent="#0ea5e9" />
+        <StatCard label="Active Plans" value={`${plans.filter((p) => p.active).length} / ${plans.length}`} icon={<Layers className="h-4 w-4" />} accent="#8b5cf6" />
+        <StatCard label="Successful Payments" value={stats?.successful ?? "—"} icon={<Users className="h-4 w-4" />} accent="#10b981" />
+        <StatCard label="Total Revenue" value={stats ? "₹" + stats.totalRevenue.toLocaleString("en-IN") : "—"} icon={<TrendingUp className="h-4 w-4" />} accent="#0ea5e9" />
         <StatCard label="Currency" value="INR → 150+" icon={<IndianRupee className="h-4 w-4" />} accent="#f59e0b" />
       </div>
+
+      {plans.length === 0 && (
+        <p className="mt-6 text-sm text-muted-foreground">
+          {isResourceLoading("membershipPlans") ? "Loading plans…" : "No plans found."}
+        </p>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {plans.map((p) => (
@@ -46,7 +80,7 @@ export default function MembershipsPage() {
               <div className="flex items-end gap-1">
                 <IndianRupee className="mb-1 h-5 w-5" />
                 <span className="text-3xl font-semibold tracking-tight">{p.priceINR.toLocaleString()}</span>
-                {p.durationLabel !== "One-time" && <span className="mb-1 text-sm text-muted-foreground">/ {p.durationLabel.toLowerCase()}</span>}
+                {p.durationLabel && p.durationLabel !== "One-time" && <span className="mb-1 text-sm text-muted-foreground">/ {p.durationLabel.toLowerCase()}</span>}
               </div>
               <ul className="space-y-1 text-sm text-muted-foreground">
                 {p.benefits.map((b) => (
@@ -55,11 +89,7 @@ export default function MembershipsPage() {
               </ul>
               <div className="space-y-1.5">
                 <Label className="text-xs">Price (INR)</Label>
-                <Input
-                  type="number"
-                  value={p.priceINR}
-                  onChange={(e) => updatePlan(p.id, { priceINR: Number(e.target.value) })}
-                />
+                <PriceInput value={p.priceINR} onCommit={(n) => { updatePlan(p.id, { priceINR: n }); toast.success(`${p.name} price set to ₹${n.toLocaleString("en-IN")}`) }} />
               </div>
               <div className="flex items-center justify-between rounded-lg border border-border p-2">
                 <span className="text-sm">Plan active</span>

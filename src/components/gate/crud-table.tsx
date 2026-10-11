@@ -1,5 +1,6 @@
 import { useMemo, useState, type ChangeEvent } from "react"
-import { Plus, Pencil, Trash2, Search, Upload } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, Upload, FileText } from "lucide-react"
+import { toast } from "sonner"
 import { PageHeader } from "@/components/gate/ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,7 +38,9 @@ export interface Column<T> {
 export interface FieldDef {
   name: string
   label: string
-  type: "text" | "textarea" | "number" | "select" | "switch" | "icon"
+  type: "text" | "textarea" | "number" | "select" | "switch" | "icon" | "file"
+  /** For `file` fields: accepted MIME patterns, e.g. "image/*,application/pdf". */
+  accept?: string
   options?: { value: string; label: string }[]
   placeholder?: string
   disabled?: boolean
@@ -65,7 +68,8 @@ export function CrudTable<T extends { id: string }>({
   fields: FieldDef[]
   rows: T[]
   newRecord: () => T
-  onSave: (item: T) => void
+  /** Return `false` to keep the dialog open (e.g. failed client-side validation). */
+  onSave: (item: T) => void | false
   onDelete: (id: string) => void
   searchKeys: (keyof T)[]
   addLabel?: string
@@ -97,7 +101,7 @@ export function CrudTable<T extends { id: string }>({
   }
   function save() {
     if (editing) {
-      onSave(editing)
+      if (onSave(editing) === false) return
       setOpen(false)
     }
   }
@@ -179,6 +183,7 @@ export function CrudTable<T extends { id: string }>({
                     def={f}
                     value={(editing as any)[f.name]}
                     onChange={(v) => setEditing({ ...editing, [f.name]: v } as T)}
+                    onPatch={(patch) => setEditing({ ...editing, ...patch } as T)}
                     record={editing}
                   />
                 ))}
@@ -201,16 +206,22 @@ function FieldEditor({
   def,
   value,
   onChange,
+  onPatch,
   record,
 }: {
   def: FieldDef
   value: any
   onChange: (v: any) => void
+  /** Set several fields of the record at once (used by file fields to fill name, type, size…). */
+  onPatch: (patch: Record<string, unknown>) => void
   record?: any
 }) {
   return (
     <div className="space-y-1.5">
       <Label className="text-xs">{def.label}</Label>
+      {def.type === "file" && (
+        <FileField accept={def.accept} value={value} onPatch={onPatch} record={record} fieldName={def.name} />
+      )}
       {def.type === "icon" && (
         <IconField value={value} onChange={onChange} record={record} />
       )}
@@ -292,6 +303,94 @@ function IconField({
           </p>
         </div>
       </div>
+    </div>
+  )
+}
+
+const MAX_FILE_MB = 2
+
+function mediaTypeOf(mime: string): "image" | "pdf" | "audio" | null {
+  if (mime.startsWith("image/")) return "image"
+  if (mime === "application/pdf") return "pdf"
+  if (mime.startsWith("audio/")) return "audio"
+  return null
+}
+
+/**
+ * Pick a file from the device. Fills the record's url (as an embedded data URL —
+ * there is no storage endpoint yet), plus name / type / mime / size / dimensions,
+ * so the admin never has to type those by hand. A pasted link still works.
+ */
+function FileField({
+  accept,
+  value,
+  onPatch,
+  record,
+  fieldName,
+}: {
+  accept?: string
+  value: any
+  onPatch: (patch: Record<string, unknown>) => void
+  record?: any
+  fieldName: string
+}) {
+  function onFile(e: ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]
+    e.target.value = ""
+    if (!f) return
+    const type = mediaTypeOf(f.type)
+    if (!type) return toast.error("Choose an image, PDF or audio file.")
+    if (f.size > MAX_FILE_MB * 1024 * 1024) {
+      return toast.error(`File is too large (max ${MAX_FILE_MB} MB).`)
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const url = reader.result as string
+      const patch: Record<string, unknown> = {
+        [fieldName]: url,
+        type,
+        mime: f.type,
+        sizeKB: Math.max(1, Math.round(f.size / 1024)),
+        name: record?.name ? record.name : f.name,
+        width: undefined,
+        height: undefined,
+      }
+      if (type === "image") {
+        const img = new Image()
+        img.onload = () => onPatch({ ...patch, width: img.naturalWidth, height: img.naturalHeight })
+        img.onerror = () => onPatch(patch)
+        img.src = url
+      } else {
+        onPatch(patch)
+      }
+    }
+    reader.readAsDataURL(f)
+  }
+
+  const hasFile = typeof value === "string" && value.length > 0
+  const isImage = hasFile && (value.startsWith("data:image/") || record?.type === "image")
+
+  return (
+    <div className="space-y-2">
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background px-4 py-6 text-sm text-muted-foreground transition-colors hover:bg-accent/40">
+        {hasFile && isImage ? (
+          <img src={value} alt="" className="max-h-40 rounded-md object-contain" />
+        ) : hasFile ? (
+          <FileText className="h-8 w-8" />
+        ) : (
+          <Upload className="h-6 w-6" />
+        )}
+        <span className="font-medium text-foreground">{hasFile ? "Replace file" : "Choose a file to upload"}</span>
+        <span className="text-xs">Image, PDF or audio · up to {MAX_FILE_MB} MB</span>
+        <input type="file" accept={accept} className="hidden" onChange={onFile} />
+      </label>
+      {hasFile && (
+        <p className="truncate text-xs text-muted-foreground">
+          {record?.name} · {record?.mime}
+          {record?.sizeKB ? ` · ${record.sizeKB} KB` : ""}
+          {record?.width ? ` · ${record.width}×${record.height}` : ""}
+        </p>
+      )}
     </div>
   )
 }

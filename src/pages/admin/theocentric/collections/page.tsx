@@ -1,11 +1,11 @@
 import { useState } from "react"
-import { Layers, Pencil, Plus, Trash2 } from "lucide-react"
+import { toast } from "sonner"
+import { Pencil, Plus, Trash2 } from "lucide-react"
 import { PageHeader, StatusBadge } from "@/components/gate/ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -19,7 +19,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useTheo } from "@/lib/gate/theocentric/store"
+import { useTheo, useTheoLoad } from "@/lib/gate/theocentric/store"
+import { ContentPicker, ContentSearchInput, useContentSearch } from "@/components/gate/theocentric/content-picker"
 import type { PublicationStatus, TheoCollection } from "@/lib/gate/theocentric/types"
 
 const statusOpts: { value: PublicationStatus; label: string }[] = [
@@ -30,7 +31,9 @@ const statusOpts: { value: PublicationStatus; label: string }[] = [
 ]
 
 export default function CollectionsPage() {
-  const { data, addCollection, updateCollection, removeCollection } = useTheo()
+  const { data, addCollection, updateCollection, removeCollection, loadMore, hasMore, isLoading } = useTheo()
+  useTheoLoad("collections")
+  const { q, setQ } = useContentSearch()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<TheoCollection | null>(null)
 
@@ -52,6 +55,7 @@ export default function CollectionsPage() {
   }
   function save() {
     if (!editing) return
+    if (!editing.name.trim()) return toast.error("A collection needs a name.")
     if (data.collections.some((x) => x.id === editing.id)) updateCollection(editing.id, editing)
     else addCollection(editing)
     setOpen(false)
@@ -103,9 +107,17 @@ export default function CollectionsPage() {
           </div>
         ))}
         {data.collections.length === 0 && (
-          <p className="text-sm text-muted-foreground">No collections yet.</p>
+          <p className="text-sm text-muted-foreground">{isLoading("collections") ? "Loading collections…" : "No collections yet."}</p>
         )}
       </div>
+
+      {hasMore("collections") && (
+        <div className="mt-4 flex justify-center">
+          <Button variant="outline" size="sm" disabled={isLoading("collections")} onClick={() => loadMore("collections")}>
+            {isLoading("collections") ? "Loading…" : "Load more"}
+          </Button>
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
@@ -143,50 +155,21 @@ export default function CollectionsPage() {
                   <Textarea value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} rows={2} />
                 </div>
 
-                <div>
-                  <p className="mb-2 text-sm font-medium">Items ({editing.items.length})</p>
-                  <div className="max-h-56 space-y-1 overflow-y-auto rounded-lg border border-border p-2">
-                    {data.content.map((c) => {
-                      const item = editing.items.find((i) => i.contentId === c.id)
-                      return (
-                        <label key={c.id} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent/40">
-                          <input type="checkbox" checked={!!item} onChange={() => toggleItem(c.id)} />
-                          <span className="flex-1 truncate">{c.title || "Untitled"}</span>
-                          {item && (
-                            <span className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                value={item.order}
-                                onChange={(e) =>
-                                  setEditing({
-                                    ...editing,
-                                    items: editing.items.map((i) =>
-                                      i.contentId === c.id ? { ...i, order: Number(e.target.value) } : i,
-                                    ),
-                                  })
-                                }
-                                className="w-14 rounded border border-border bg-background px-1.5 py-0.5 text-xs"
-                              />
-                              <label className="flex items-center gap-1 text-xs">
-                                <Switch
-                                  checked={item.required}
-                                  onCheckedChange={(v) =>
-                                    setEditing({
-                                      ...editing,
-                                      items: editing.items.map((i) =>
-                                        i.contentId === c.id ? { ...i, required: v } : i,
-                                      ),
-                                    })
-                                  }
-                                />
-                                Req
-                              </label>
-                            </span>
-                          )}
-                        </label>
-                      )
-                    })}
-                  </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Items ({editing.items.length})</p>
+                  <ContentSearchInput q={q} setQ={setQ} />
+                  <ContentPicker
+                    showOrder
+                    className="max-h-56"
+                    items={editing.items}
+                    onToggle={toggleItem}
+                    onChange={(contentId, patch) =>
+                      setEditing({
+                        ...editing,
+                        items: editing.items.map((i) => (i.contentId === contentId ? { ...i, ...patch } : i)),
+                      })
+                    }
+                  />
                 </div>
               </div>
               <div className="shrink-0 flex justify-end gap-2 border-t border-border px-6 py-4">

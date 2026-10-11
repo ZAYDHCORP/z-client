@@ -51,6 +51,41 @@ export const API = {
     OPERATIONS_SOCIAL_LINK_BY_ID: (id: string) => `${BASE}/admin/operations/social-links/${id}`,
     OPERATIONS_SERVICES: `${BASE}/admin/operations/services`,
     OPERATIONS_SERVICE_BY_ID: (id: string) => `${BASE}/admin/operations/services/${id}`,
+
+    // Memberships — plans are editable; payments are read-only reporting.
+    // (Checkout and webhook endpoints are intentionally NOT defined here —
+    // payment flows must never be reachable from the admin browser.)
+    MEMBERSHIP_PLANS: `${BASE}/admin/memberships/plans`,
+    MEMBERSHIP_PLAN_BY_ID: (id: string) => `${BASE}/admin/memberships/plans/${id}`,
+    MEMBERSHIP_PAYMENTS: `${BASE}/admin/memberships/payments`,
+    MEMBERSHIP_PAYMENTS_STATS: `${BASE}/admin/memberships/payments/stats`,
+
+    // Theocentric & Doxology. The backend mounts Phase 1 taxonomy under a
+    // different prefix (`theocentricTaxonomy`) than the rest of the module
+    // (`theocentric`) — the full-test-suite doc lists everything under
+    // `theocentric`, but the deployed routes differ.
+    THEO_CATEGORIES: `${BASE}/admin/theocentricTaxonomy/categories`,
+    THEO_CATEGORY_BY_ID: (id: string) => `${BASE}/admin/theocentricTaxonomy/categories/${id}`,
+    THEO_SUBCATEGORIES: `${BASE}/admin/theocentricTaxonomy/subcategories`,
+    THEO_SUBCATEGORY_BY_ID: (id: string) => `${BASE}/admin/theocentricTaxonomy/subcategories/${id}`,
+    THEO_TAGS: `${BASE}/admin/theocentricTaxonomy/tags`,
+    THEO_TAG_BY_ID: (id: string) => `${BASE}/admin/theocentricTaxonomy/tags/${id}`,
+    THEO_REFERENCES: `${BASE}/admin/theocentricTaxonomy/references`,
+    THEO_REFERENCE_BY_ID: (id: string) => `${BASE}/admin/theocentricTaxonomy/references/${id}`,
+    THEO_CONTENT: `${BASE}/admin/theocentric/content`,
+    THEO_CONTENT_BY_ID: (id: string) => `${BASE}/admin/theocentric/content/${id}`,
+    THEO_CONTENT_STATUS: (id: string) => `${BASE}/admin/theocentric/content/${id}/status`,
+    THEO_CONTENT_VERIFICATION: (id: string) => `${BASE}/admin/theocentric/content/${id}/verification`,
+    THEO_CONTENT_FEATURED: (id: string) => `${BASE}/admin/theocentric/content/${id}/featured`,
+    THEO_CONTENT_DUPLICATE: (id: string) => `${BASE}/admin/theocentric/content/${id}/duplicate`,
+    THEO_CONTENT_REORDER: `${BASE}/admin/theocentric/content/reorder`,
+    THEO_COLLECTIONS: `${BASE}/admin/theocentric/collections`,
+    THEO_COLLECTION_BY_ID: (id: string) => `${BASE}/admin/theocentric/collections/${id}`,
+    THEO_MILESTONES: `${BASE}/admin/theocentric/milestones`,
+    THEO_MILESTONE_BY_ID: (id: string) => `${BASE}/admin/theocentric/milestones/${id}`,
+    THEO_JOURNEY: `${BASE}/admin/theocentric/journey`,
+    THEO_AFTER_SALAH: `${BASE}/admin/theocentric/after-salah`,
+    THEO_SETTINGS: `${BASE}/admin/theocentric/settings`,
   },
   PODCASTS: `${BASE}/podcasts`,
 } as const;

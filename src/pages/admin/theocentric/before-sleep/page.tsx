@@ -6,6 +6,7 @@ export default function BeforeSleepPage() {
       title="Before Sleep"
       description="Adhkars and supplications assigned to the Before Sleep routine."
       kinds={["adkar"]}
+      filters={{ routine: "before_sleep" }}
       predicate={(c) => c.routines.includes("before_sleep")}
       hideAdd
     />

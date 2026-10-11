@@ -192,6 +192,14 @@ export interface PaymentRecord {
   membershipType: "subscription" | "lifetime"
 }
 
+export interface PaymentStats {
+  totalRevenue: number
+  successful: number
+  pending: number
+  failed: number
+  refunded: number
+}
+
 export interface Category {
   id: string
   platform: PlatformId | "ALL"
@@ -284,6 +292,7 @@ export interface MediaAsset {
   uploadedAt: string
   usedBy: number
   hash: string
+  isDuplicate?: boolean
   duplicateOf?: string
 }
 

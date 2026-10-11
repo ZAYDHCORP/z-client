@@ -18,13 +18,15 @@ import { PLATFORMS, PLATFORM_MAP } from "@/lib/gate/platforms"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function AnalyticsPage() {
-  const { data, ensureContentLoaded, ensureUsersLoaded, ensureRssLoaded } = useGate()
+  const { data, ensureContentLoaded, ensureUsersLoaded, ensureRssLoaded, ensurePlansLoaded, ensurePaymentsLoaded } = useGate()
 
   useEffect(() => {
     ensureContentLoaded()
     ensureUsersLoaded()
     ensureRssLoaded()
-  }, [ensureContentLoaded, ensureUsersLoaded, ensureRssLoaded])
+    ensurePlansLoaded()
+    ensurePaymentsLoaded()
+  }, [ensureContentLoaded, ensureUsersLoaded, ensureRssLoaded, ensurePlansLoaded, ensurePaymentsLoaded])
 
   const all = [...data.books, ...data.research, ...data.infographics, ...data.podcasts]
 

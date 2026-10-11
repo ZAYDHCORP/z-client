@@ -7,7 +7,7 @@ import { Image as ImageIcon, FileText, Music, Copy } from "lucide-react"
 import type { MediaAsset } from "@/lib/gate/types"
 
 export default function MediaLibraryPage() {
-  const { data, removeMedia, updateMedia, ensureMediaLoaded, loadMore, hasMore, isResourceLoading } = useGate()
+  const { data, addMedia, removeMedia, updateMedia, ensureMediaLoaded, loadMore, hasMore, isResourceLoading } = useGate()
 
   useEffect(() => {
     ensureMediaLoaded()
@@ -22,11 +22,8 @@ export default function MediaLibraryPage() {
 
   const rows = data.mediaAssets.filter((m) => folder === "all" || m.folder === folder)
 
-  const duplicates = useMemo(() => {
-    const seen = new Map<string, number>()
-    data.mediaAssets.forEach((m) => seen.set(m.hash, (seen.get(m.hash) ?? 0) + 1))
-    return seen
-  }, [data.mediaAssets])
+  // The server flags duplicates (same content hash) via `isDuplicate`.
+  const duplicateCount = data.mediaAssets.filter((m) => m.isDuplicate).length
 
   return (
     <div>
@@ -36,7 +33,7 @@ export default function MediaLibraryPage() {
             {f === "all" ? "All Folders" : f}
           </Button>
         ))}
-        <Button size="sm" variant="outline" className="ml-auto" onClick={() => toast.success("Duplicate scan complete")}>
+        <Button size="sm" variant="outline" className="ml-auto" onClick={() => toast.info(duplicateCount ? `${duplicateCount} possible duplicate${duplicateCount > 1 ? "s" : ""} in the loaded items` : "No duplicates found in the loaded items")}>
           <Copy className="mr-1.5 h-3.5 w-3.5" /> Detect Duplicates
         </Button>
       </div>
@@ -62,19 +59,20 @@ export default function MediaLibraryPage() {
           usedBy: 0,
           hash: Math.random().toString(36).slice(2, 8),
         })}
-        onSave={(item) => updateMedia(item.id, item)}
+        onSave={(item) => {
+          if (!item.url) { toast.error("Choose a file to upload."); return false }
+          if (!item.name.trim()) { toast.error("Give the file a name."); return false }
+          data.mediaAssets.some((m) => m.id === item.id) ? updateMedia(item.id, item) : addMedia(item)
+        }}
         onDelete={removeMedia}
         addLabel="Upload"
         dialogTitle="Media Asset"
         fields={[
+          { name: "url", label: "File", type: "file", accept: "image/*,application/pdf,audio/*" },
           { name: "name", label: "File Name", type: "text" },
           { name: "folder", label: "Folder", type: "text" },
-          { name: "type", label: "Type", type: "select", options: [{ value: "image", label: "Image" }, { value: "pdf", label: "PDF" }, { value: "audio", label: "Audio" }] },
           { name: "altText", label: "Alt Text", type: "text" },
-          { name: "url", label: "URL", type: "text" },
-          { name: "sizeKB", label: "Size (KB)", type: "number" },
-          { name: "usedBy", label: "Used By (count)", type: "number" },
-        ]}
+                  ]}
         columns={[
           {
             header: "Asset",
@@ -90,7 +88,7 @@ export default function MediaLibraryPage() {
           { header: "Used", cell: (r) => <span className="text-muted-foreground">{r.usedBy}</span> },
           {
             header: "Duplicate",
-            cell: (r) => (duplicates.get(r.hash)! > 1 ? <span className="text-amber-600">possible dup</span> : <span className="text-muted-foreground">—</span>),
+            cell: (r) => (r.isDuplicate ? <span className="text-amber-600">possible dup</span> : <span className="text-muted-foreground">—</span>),
           },
         ]}
       />

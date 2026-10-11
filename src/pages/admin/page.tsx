@@ -52,6 +52,7 @@ export default function OverviewPage() {
     ensureUsersLoaded,
     ensureCategoriesLoaded,
     ensureRssLoaded,
+    ensurePaymentsLoaded,
   } = useGate()
 
   useEffect(() => {
@@ -59,19 +60,17 @@ export default function OverviewPage() {
     ensureUsersLoaded()
     ensureCategoriesLoaded()
     ensureRssLoaded()
-  }, [ensureContentLoaded, ensureUsersLoaded, ensureCategoriesLoaded, ensureRssLoaded])
+    ensurePaymentsLoaded()
+  }, [ensureContentLoaded, ensureUsersLoaded, ensureCategoriesLoaded, ensureRssLoaded, ensurePaymentsLoaded])
 
   const stats = useMemo(() => {
     const users = data.users
     const activeMembers = users.filter(
       (u) => u.membership === "active" || u.membership === "lifetime",
     ).length
-    const revenue = data.payments
-      .filter((p) => p.status === "success")
-      .reduce((s, p) => s + p.amount, 0)
-    const renewals = data.payments.filter(
-      (p) => p.status === "success" && p.membershipType === "subscription",
-    ).length
+    // Headline numbers come from the server-side aggregate, not the loaded page.
+    const revenue = data.paymentStats?.totalRevenue ?? 0
+    const renewals = data.paymentStats?.successful ?? 0
     const all = [
       ...data.books,
       ...data.research,

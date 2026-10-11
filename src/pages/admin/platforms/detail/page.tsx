@@ -1,10 +1,12 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { Globe, BookOpen, FileText, Folder, Boxes, Webhook, ArrowLeft } from "lucide-react"
 import { PageHeader, StatCard, StatusBadge } from "@/components/gate/ui"
-import { useGate } from "@/lib/gate/store"
+import { describeError, useGate } from "@/lib/gate/store"
+import { adminApi } from "@/lib/gate/adminApi"
+import { toast } from "sonner"
 import { PLATFORMS, PLATFORM_MAP } from "@/lib/gate/platforms"
-import type { PlatformId } from "@/lib/gate/types"
+import type { PlatformId, RssFeed, ServiceRecord, SocialLink } from "@/lib/gate/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -15,34 +17,44 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+/** Shape of GET /admin/platforms/:id/stats (every part optional — we fall back to loaded data). */
+interface PlatformStatsResponse {
+  stats?: { content?: number; published?: number; services?: number; followers?: number; views?: number }
+  services?: ServiceRecord[]
+  socialLinks?: SocialLink[]
+  rss?: RssFeed[]
+}
+
 export default function PlatformPage() {
   const params = useParams<{ id: string }>()
   const id = (params.id ?? "") as PlatformId
   const {
     data,
     ensureContentLoaded,
-    ensureUsersLoaded,
     ensureCategoriesLoaded,
-    ensureServicesLoaded,
-    ensureSocialLinksLoaded,
-    ensureRssLoaded,
   } = useGate()
+
+  // Counts, services, links and feeds for this platform come from the server's
+  // stats endpoint — real totals, not whatever page of data happens to be loaded.
+  const [remote, setRemote] = useState<PlatformStatsResponse | null>(null)
 
   useEffect(() => {
     ensureContentLoaded()
-    ensureUsersLoaded()
     ensureCategoriesLoaded()
-    ensureServicesLoaded()
-    ensureSocialLinksLoaded()
-    ensureRssLoaded()
-  }, [
-    ensureContentLoaded,
-    ensureUsersLoaded,
-    ensureCategoriesLoaded,
-    ensureServicesLoaded,
-    ensureSocialLinksLoaded,
-    ensureRssLoaded,
-  ])
+  }, [ensureContentLoaded, ensureCategoriesLoaded])
+
+  useEffect(() => {
+    if (!PLATFORM_MAP[id]) return
+    let cancelled = false
+    setRemote(null)
+    adminApi.platforms
+      .stats<PlatformStatsResponse>(id)
+      .then((res) => !cancelled && setRemote(res))
+      .catch((err) => !cancelled && toast.error(describeError(err) ?? "Could not load platform stats."))
+    return () => {
+      cancelled = true
+    }
+  }, [id])
 
   if (!PLATFORM_MAP[id]) {
     return (
@@ -60,17 +72,17 @@ export default function PlatformPage() {
   const meta = PLATFORM_MAP[id]
   const content = [...data.books, ...data.research, ...data.infographics, ...data.podcasts].filter((c) => c.platform === id)
   const categories = data.categories.filter((c) => c.platform === id)
-  const services = data.services.filter((s) => s.platform === id)
-  const links = data.socialLinks.filter((l) => l.platform === id || l.platform === "ALL")
-  const rss = data.rss.filter((f) => f.platform === id)
+  const services = remote?.services ?? []
+  const links = remote?.socialLinks ?? []
+  const rss = remote?.rss ?? []
 
   const stats = {
-    content: content.length,
-    published: content.filter((c) => c.status === "published").length,
+    content: remote?.stats?.content ?? content.length,
+    published: remote?.stats?.published ?? content.filter((c) => c.status === "published").length,
     categories: categories.length,
-    services: services.length,
-    views: content.reduce((s, c) => s + c.views, 0),
-    followers: data.users.filter((u) => u.followedCategories.some((c) => c.startsWith(id))).length,
+    services: remote?.stats?.services ?? services.length,
+    views: remote?.stats?.views ?? content.reduce((s, c) => s + c.views, 0),
+    followers: remote?.stats?.followers ?? 0,
   }
 
   return (
@@ -122,10 +134,10 @@ export default function PlatformPage() {
             {services.map((s) => (
               <div key={s.id} className="rounded-lg border border-border p-2.5">
                 <p className="text-sm font-medium">{s.title}</p>
-                <p className="line-clamp-1 text-xs text-muted-foreground">{s.shortDescription}</p>
+                <p className="line-clamp-1 text-xs text-muted-foreground">{s.shortDescription ?? s.category}</p>
               </div>
             ))}
-            {services.length === 0 && <p className="text-sm text-muted-foreground">No services yet.</p>}
+            {services.length === 0 && <p className="text-sm text-muted-foreground">{remote ? "No services yet." : "Loading…"}</p>}
           </CardContent>
         </Card>
 
@@ -140,7 +152,7 @@ export default function PlatformPage() {
             ))}
             {rss.map((f) => (
               <div key={f.id} className="flex items-center justify-between rounded-lg border border-border p-2.5">
-                <span className="text-sm font-medium">RSS · {f.totalEpisodes} eps</span>
+                <span className="text-sm font-medium">RSS · {f.totalEpisodes ?? 0} eps</span>
                 <StatusBadge status={f.status} />
               </div>
             ))}

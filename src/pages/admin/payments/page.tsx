@@ -1,8 +1,11 @@
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Download, IndianRupee } from "lucide-react"
 import { PageHeader, StatCard, StatusBadge } from "@/components/gate/ui"
-import { useGate } from "@/lib/gate/store"
+import { describeError, useGate } from "@/lib/gate/store"
+import { adminApi } from "@/lib/gate/adminApi"
+import { normalizePayment } from "@/lib/gate/billing"
+import type { PaymentRecord } from "@/lib/gate/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -21,48 +24,92 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+/**
+ * Read-only reporting. Filters (status / user name search) are applied by the
+ * server so paging stays correct; the page never creates orders or touches the
+ * payment gateway.
+ */
 export default function PaymentsPage() {
-  const { data } = useGate()
+  const { data, ensurePaymentsLoaded } = useGate()
+  const stats = data.paymentStats
+
   const [q, setQ] = useState("")
   const [status, setStatus] = useState("all")
+  const [rows, setRows] = useState<PaymentRecord[]>([])
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const requestId = useRef(0)
 
-  const filtered = useMemo(() => {
-    return data.payments
-      .filter((p) => (status === "all" ? true : p.status === status))
-      .filter((p) =>
-        q ? p.userName.toLowerCase().includes(q.toLowerCase()) || p.transactionRef.includes(q) : true,
-      )
-      .slice()
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  }, [data.payments, q, status])
+  useEffect(() => {
+    ensurePaymentsLoaded()
+  }, [ensurePaymentsLoaded])
 
-  const totalRev = data.payments.filter((p) => p.status === "success").reduce((s, p) => s + p.amount, 0)
-  const failed = data.payments.filter((p) => p.status === "failed").length
-  const refunded = data.payments.filter((p) => p.status === "refunded").length
-  const pending = data.payments.filter((p) => p.status === "pending").length
+  const fetchPage = useCallback(async (nextPage: number, query: string, st: string) => {
+    const id = ++requestId.current
+    setLoading(true)
+    try {
+      const res = await adminApi.memberships.payments.list<Record<string, unknown>>(nextPage, {
+        status: st,
+        q: query.trim() || undefined,
+      })
+      if (id !== requestId.current) return // a newer filter superseded this request
+      const items = res.items.map(normalizePayment)
+      setRows((cur) => (nextPage > 1 ? [...cur, ...items] : items))
+      setPage(nextPage)
+      setHasMore(res.hasMore)
+    } catch (err) {
+      if (id !== requestId.current) return
+      toast.error(describeError(err) ?? "Could not load payments from the server.")
+    } finally {
+      if (id === requestId.current) setLoading(false)
+    }
+  }, [])
+
+  // Re-query from page 1 whenever a filter changes (search is debounced).
+  useEffect(() => {
+    const t = setTimeout(() => void fetchPage(1, q, status), q ? 350 : 0)
+    return () => clearTimeout(t)
+  }, [q, status, fetchPage])
+
+  const exportCsv = () => {
+    if (rows.length === 0) return toast.info("Nothing to export")
+    const head = ["Reference", "User", "Plan", "Amount", "Currency", "Method", "Status", "Date"]
+    const lines = rows.map((p) =>
+      [p.transactionRef, p.userName, p.plan, p.amount, p.currency, p.method, p.status, p.createdAt]
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(","),
+    )
+    const url = URL.createObjectURL(new Blob([[head.join(","), ...lines].join("\n")], { type: "text/csv" }))
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "payments.csv"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <div>
       <PageHeader
         title="Payments"
         description="Transactions, successful payments, failures, refunds, renewals and revenue reporting."
-        actions={<Button variant="outline" onClick={() => toast.success("Export queued")}><Download className="mr-1.5 h-4 w-4" /> Export</Button>}
+        actions={<Button variant="outline" onClick={exportCsv}><Download className="mr-1.5 h-4 w-4" /> Export</Button>}
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total Revenue" value={"₹" + totalRev.toLocaleString("en-IN")} icon={<IndianRupee className="h-4 w-4" />} accent="#10b981" />
-        <StatCard label="Successful" value={data.payments.filter((p) => p.status === "success").length} delta="verified" accent="#0ea5e9" />
-        <StatCard label="Pending" value={pending} accent="#f59e0b" />
-        <StatCard label="Failed / Refunded" value={`${failed} / ${refunded}`} accent="#ec4899" />
+        <StatCard label="Total Revenue" value={stats ? "₹" + stats.totalRevenue.toLocaleString("en-IN") : "—"} icon={<IndianRupee className="h-4 w-4" />} accent="#10b981" />
+        <StatCard label="Successful" value={stats?.successful ?? "—"} delta="verified" accent="#0ea5e9" />
+        <StatCard label="Pending" value={stats?.pending ?? "—"} accent="#f59e0b" />
+        <StatCard label="Failed / Refunded" value={stats ? `${stats.failed} / ${stats.refunded}` : "—"} accent="#ec4899" />
       </div>
 
       <div className="mt-6 mb-4 flex flex-col gap-3 sm:flex-row">
-        <Input placeholder="Search user or reference…" value={q} onChange={(e) => setQ(e.target.value)} className="sm:max-w-xs" />
+        <Input placeholder="Search by user name…" value={q} onChange={(e) => setQ(e.target.value)} className="sm:max-w-xs" />
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="sm:w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            {["success", "pending", "failed", "refunded", "cancelled"].map((s) => (
+            {["success", "pending", "failed", "refunded"].map((s) => (
               <SelectItem key={s} value={s}>{s}</SelectItem>
             ))}
           </SelectContent>
@@ -83,7 +130,7 @@ export default function PaymentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((p) => (
+            {rows.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-mono text-xs">{p.transactionRef}</TableCell>
                 <TableCell>{p.userName}</TableCell>
@@ -91,15 +138,34 @@ export default function PaymentsPage() {
                   {p.plan}
                   {p.membershipType === "lifetime" && <span className="ml-1 text-xs text-muted-foreground">(lifetime)</span>}
                 </TableCell>
-                <TableCell className="tabular-nums">₹{p.amount.toLocaleString()}</TableCell>
+                <TableCell className="tabular-nums">
+                  {p.currency === "INR" ? "₹" : `${p.currency} `}
+                  {p.amount.toLocaleString()}
+                </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{p.method}</TableCell>
                 <TableCell><StatusBadge status={p.status} /></TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(p.createdAt).toLocaleDateString()}</TableCell>
               </TableRow>
             ))}
+            {rows.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                  {loading ? "Loading payments…" : "No payments found."}
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
+
+      {hasMore && (
+        <div className="mt-3 flex justify-center">
+          <Button variant="outline" size="sm" disabled={loading} onClick={() => void fetchPage(page + 1, q, status)}>
+            {loading ? "Loading…" : "Load more"}
+          </Button>
+        </div>
+      )}
+
       <p className="mt-3 text-xs text-muted-foreground">
         Successful payment automatically activates the correct membership and unlocks premium access. Failed payments never grant access.
       </p>

@@ -6,6 +6,7 @@ export default function PublishedPage() {
       title="Published"
       description="Live content visible to users across every kind."
       kinds={["dua", "adkar", "quranic", "rabbana", "ruqiyah"]}
+      filters={{ status: "published" }}
       predicate={(c) => c.status === "published"}
       showKind
       hideAdd

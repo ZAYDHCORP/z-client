@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { SpiritualEditor } from "@/components/gate/theocentric/spiritual-editor"
-import { useTheo } from "@/lib/gate/theocentric/store"
+import { useTheo, useTheoContent } from "@/lib/gate/theocentric/store"
 import type { SpiritualContent } from "@/lib/gate/theocentric/types"
 
 interface Issue {
@@ -27,7 +27,8 @@ interface Issue {
 }
 
 export default function ContentAuditPage() {
-  const { data } = useTheo()
+  const { data, hasMore, loadMore, isLoading } = useTheo()
+  useTheoContent({})
   const [editing, setEditing] = useState<SpiritualContent | null>(null)
   const [editOpen, setEditOpen] = useState(false)
 
@@ -74,7 +75,7 @@ export default function ContentAuditPage() {
     <div>
       <PageHeader
         title="Content Audit"
-        description="Automated checks for missing fields, duplicates, missing references and verification gaps. Click a row to fix it."
+        description="Automated checks for missing fields, duplicates, missing references and verification gaps across the content loaded so far. Click a row to fix it."
       />
 
       <div className="mb-4 grid grid-cols-3 gap-3">
@@ -135,6 +136,14 @@ export default function ContentAuditPage() {
           </TableBody>
         </Table>
       </div>
+
+      {hasMore("content") && (
+        <div className="mt-4 flex justify-center">
+          <Button variant="outline" size="sm" disabled={isLoading("content")} onClick={() => loadMore("content")}>
+            {isLoading("content") ? "Loading…" : "Audit the next 25"}
+          </Button>
+        </div>
+      )}
 
       <SpiritualEditor
         kind={editing ? editing.kind : "dua"}

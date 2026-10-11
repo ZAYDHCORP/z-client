@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { Eye } from "lucide-react"
 import {
   Dialog,
@@ -19,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useTheo } from "@/lib/gate/theocentric/store"
+import { useTheo, useTheoLoad } from "@/lib/gate/theocentric/store"
 import {
   ROUTINE_LABELS,
   type ContentKind,
@@ -77,13 +78,21 @@ export function SpiritualEditor({
   onOpenChange: (v: boolean) => void
 }) {
   const { data, addContent, updateContent } = useTheo()
+  useTheoLoad("categories", "subcategories")
   const [form, setForm] = useState<SpiritualContent>(() => (item ? item : empty(kind)))
   const [customRep, setCustomRep] = useState("")
 
   useEffect(() => {
     if (open) {
-      setForm(item ? item : empty(kind))
-      setCustomRep("")
+      const start = item ? item : empty(kind)
+      // A stored custom count (e.g. "250") isn't one of the presets — show it as Custom.
+      if (!REP_OPTIONS.includes(start.repetition)) {
+        setForm({ ...start, repetition: "custom" })
+        setCustomRep(start.repetition)
+      } else {
+        setForm(start)
+        setCustomRep("")
+      }
     }
   }, [open, item, kind])
 
@@ -101,6 +110,17 @@ export function SpiritualEditor({
   }
 
   function save() {
+    if (!form.title.trim()) return toast.error("A title is required.")
+    if (!form.category) return toast.error("Choose a category.")
+    if (form.repetition === "custom" && customRep && !(Number.isInteger(Number(customRep)) && Number(customRep) > 0)) {
+      return toast.error("Custom repetition must be a positive whole number.")
+    }
+    if (form.surahNumber !== null && (form.surahNumber < 1 || form.surahNumber > 114)) {
+      return toast.error("Surah number must be between 1 and 114.")
+    }
+    if (form.status === "published" && form.verification !== "verified") {
+      return toast.error("Only verified content can be published. Set verification to verified first.")
+    }
     const finalRep = form.repetition === "custom" ? customRep || "none" : form.repetition
     const payload = { ...form, repetition: finalRep }
     if (item) updateContent(item.id, payload)

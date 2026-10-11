@@ -6,6 +6,7 @@ export default function MorningAdhkarPage() {
       title="Morning Adhkars"
       description="Adhkars assigned to the Morning routine."
       kinds={["adkar"]}
+      filters={{ routine: "morning" }}
       predicate={(c) => c.routines.includes("morning")}
       hideAdd
     />

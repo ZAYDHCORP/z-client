@@ -1,11 +1,15 @@
 import { CrudTable } from "@/components/gate/crud-table"
-import { useTheo } from "@/lib/gate/theocentric/store"
+import { useTheo, useTheoLoad } from "@/lib/gate/theocentric/store"
 import type { TheoTag } from "@/lib/gate/theocentric/types"
 
 export default function TheoTagsPage() {
-  const { data, addTag, updateTag, removeTag } = useTheo()
+  const { data, addTag, updateTag, removeTag, loadMore, hasMore, isLoading } = useTheo()
+  useTheoLoad("tags")
   return (
     <CrudTable
+      onLoadMore={() => loadMore("tags")}
+      hasMore={hasMore("tags")}
+      loadingMore={isLoading("tags")}
       title="Tags"
       description="Thematic tags applied across content for discovery."
       rows={data.tags}

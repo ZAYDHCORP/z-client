@@ -181,6 +181,8 @@ const NAV: NavGroup[] = [
         { label: "40 Rabbana", href: "/admin/theocentric/40-rabbana", icon: BookHeart },
         { label: "Ruqiyah", href: "/admin/theocentric/ruqiyah", icon: Wand2 },
         { label: "Tags", href: "/admin/theocentric/tags", icon: Tags },
+        { label: "References", href: "/admin/theocentric/references", icon: BookText },
+        { label: "Milestones", href: "/admin/theocentric/milestones", icon: BadgeCheck },
         { label: "Featured Content", href: "/admin/theocentric/featured", icon: Star },
         { label: "Verification", href: "/admin/theocentric/verification", icon: BadgeCheck },
         { label: "Drafts", href: "/admin/theocentric/drafts", icon: FileEdit },

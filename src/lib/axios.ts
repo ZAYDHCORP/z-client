@@ -21,6 +21,25 @@ export const api = axios.create({
 const isPublicEndpoint = (url?: string) =>
   PUBLIC_ENDPOINTS.some((endpoint) => url?.includes(endpoint));
 
+/**
+ * Payment checkout (`/payments/*`) and gateway webhooks (`/webhooks/*`) must
+ * never be triggered from the browser — checkout belongs to the real customer
+ * flow and webhooks are signed server-to-server calls. The admin read-only
+ * reporting endpoints live under `/admin/memberships/payments` and are fine.
+ */
+const BLOCKED_PATH = /^\/(payments|webhooks)(\/|$|\?)/;
+
+export function isBlockedPaymentRequest(url?: string): boolean {
+  if (!url) return false;
+  let path = url;
+  try {
+    path = new URL(url, "http://local").pathname;
+  } catch {
+    /* relative path — test as-is */
+  }
+  return BLOCKED_PATH.test(path.replace(/^\/api\/v\d+/, ""));
+}
+
 let clientDataCache: Awaited<ReturnType<typeof getClientData>> | null = null;
 
 async function getCachedClientData() {
@@ -43,6 +62,14 @@ const refreshAccessToken = async () => {
 
 api.interceptors.request.use(
   async (config) => {
+    if (isBlockedPaymentRequest(config.url)) {
+      return Promise.reject({
+        status: 403,
+        message: "Payment endpoints cannot be called from the admin browser.",
+        blockedByGuard: true,
+      });
+    }
+
     config.headers = config.headers ?? {};
 
     try {
@@ -67,6 +94,11 @@ api.interceptors.response.use(
   (response) => response,
 
   async (error: AxiosError<{ message?: string }>) => {
+    // Rejected by our own request guard — nothing was sent; keep its message.
+    if ((error as unknown as { blockedByGuard?: boolean }).blockedByGuard) {
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config;
 
     // Network error

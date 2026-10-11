@@ -1,3 +1,6 @@
+import { describeError, reportError } from "./errors"
+import { changedFields } from "./theocentric/api"
+import { normalizePayment, normalizePaymentStats, normalizePlan } from "./billing"
 import {
   createContext,
   useCallback,
@@ -23,6 +26,7 @@ import type {
   MembershipPlan,
   NotificationRecord,
   PaymentRecord,
+  PaymentStats,
   PlatformId,
   PodcastEpisode,
   Region,
@@ -60,6 +64,7 @@ export interface GateData {
   users: UserRecord[]
   membershipPlans: MembershipPlan[]
   payments: PaymentRecord[]
+  paymentStats: PaymentStats | null
   categories: Category[]
   tags: Tag[]
   regions: Region[]
@@ -99,8 +104,9 @@ const SETTINGS: GateSettings = {
 
 /**
  * Domains below still come from `buildSeed()` (placeholder data) because no
- * backend endpoint has been wired up for them yet: membershipPlans, payments,
+ * backend endpoint has been wired up for them yet:
  * notifications, badgeRules, apiKeys, backups, systemHealth, activity.
+ * (Membership plans, payments and payment stats are real now — see below.)
  *
  * Everything else — content, users, taxonomy, rss feeds, media, social
  * links, services, audit logs — is fetched from the real admin API below and
@@ -124,6 +130,9 @@ function initialData(): GateData {
     socialLinks: [],
     mediaAssets: [],
     auditLogs: [],
+    membershipPlans: [],
+    payments: [],
+    paymentStats: null,
     settings: SETTINGS,
   }
 }
@@ -267,6 +276,9 @@ export type ResourceKey =
   | "mediaAssets"
   | "rss"
   | "auditLogs"
+  | "membershipPlans"
+  | "payments"
+  | "paymentStats"
 
 const RESOURCE_KEYS: ResourceKey[] = [
   "content",
@@ -280,6 +292,9 @@ const RESOURCE_KEYS: ResourceKey[] = [
   "mediaAssets",
   "rss",
   "auditLogs",
+  "membershipPlans",
+  "payments",
+  "paymentStats",
 ]
 
 const RESOURCE_LABEL: Record<ResourceKey, string> = {
@@ -294,6 +309,9 @@ const RESOURCE_LABEL: Record<ResourceKey, string> = {
   mediaAssets: "media",
   rss: "RSS feeds",
   auditLogs: "audit logs",
+  membershipPlans: "membership plans",
+  payments: "payments",
+  paymentStats: "payment stats",
 }
 
 interface ResourcePage {
@@ -365,6 +383,20 @@ async function fetchResourcePage(key: ResourceKey, page: number): Promise<Resour
       const { items, hasMore } = await adminApi.operations.rssFeeds.list<RssFeed>(page)
       return { hasMore, apply: (d, append) => ({ ...d, rss: append ? [...d.rss, ...items] : items }) }
     }
+    case "membershipPlans": {
+      const { items: raw } = await adminApi.memberships.plans.list<Record<string, unknown>>()
+      const items = raw.map(normalizePlan)
+      return { hasMore: false, apply: (d) => ({ ...d, membershipPlans: items }) }
+    }
+    case "payments": {
+      const { items: raw, hasMore } = await adminApi.memberships.payments.list<Record<string, unknown>>(page)
+      const items = raw.map(normalizePayment)
+      return { hasMore, apply: (d, append) => ({ ...d, payments: append ? [...d.payments, ...items] : items }) }
+    }
+    case "paymentStats": {
+      const stats = normalizePaymentStats(await adminApi.memberships.payments.stats<unknown>())
+      return { hasMore: false, apply: (d) => ({ ...d, paymentStats: stats }) }
+    }
     case "auditLogs": {
       const { items: raw, hasMore } = await adminApi.auditLogs.list<Record<string, unknown>>(page)
       const items = raw.map(normalizeAuditLog)
@@ -391,6 +423,8 @@ interface StoreContextValue {
   ensureMediaLoaded: () => void
   ensureRssLoaded: () => void
   ensureAuditLogsLoaded: () => void
+  ensurePlansLoaded: () => void
+  ensurePaymentsLoaded: () => void
   isResourceLoading: (key: ResourceKey) => boolean
   // pagination — 25 items per page (matches the backend default). Call
   // loadMore to fetch the next page; hasMore says whether one exists.
@@ -436,6 +470,7 @@ interface StoreContextValue {
   updateMedia: (id: string, patch: Partial<MediaAsset>) => void
   removeMedia: (id: string) => void
   // rss feeds
+  addRssFeed: (feed: RssFeed) => void
   updateRssFeed: (id: string, patch: Partial<RssFeed>) => void
   removeRssFeed: (id: string) => void
   // notifications (still local — no backend endpoint yet)
@@ -446,7 +481,7 @@ interface StoreContextValue {
   // users
   updateUser: (id: string, patch: Partial<UserRecord>) => void
   removeUser: (id: string) => void
-  // plans / badges / api / backups (still local — no backend endpoint yet)
+  // plans (server) / badges / api / backups (local — no backend endpoint yet)
   updatePlan: (id: string, patch: Partial<MembershipPlan>) => void
   addBadge: (b: BadgeRule) => void
   updateBadge: (id: string, patch: Partial<BadgeRule>) => void
@@ -500,10 +535,9 @@ function findType(d: GateData, id: string): AnyContent["type"] | null {
   return null
 }
 
-function reportError(action: string, err: unknown) {
-  console.error(`Admin action failed (${action}):`, err)
-  toast.error(`Could not ${action}. Please try again.`)
-}
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export { describeError }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<GateData>(initialData)
@@ -559,6 +593,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const ensureMediaLoaded = useCallback(() => ensureLoaded("mediaAssets"), [ensureLoaded])
   const ensureRssLoaded = useCallback(() => ensureLoaded("rss"), [ensureLoaded])
   const ensureAuditLogsLoaded = useCallback(() => ensureLoaded("auditLogs"), [ensureLoaded])
+  const ensurePlansLoaded = useCallback(() => ensureLoaded("membershipPlans"), [ensureLoaded])
+  // Payments and their headline stats are always wanted together.
+  const ensurePaymentsLoaded = useCallback(() => {
+    ensureLoaded("payments")
+    ensureLoaded("paymentStats")
+  }, [ensureLoaded])
   const isResourceLoading = useCallback((key: ResourceKey) => Boolean(loadingKeys[key]), [loadingKeys])
   const hasMore = useCallback((key: ResourceKey) => Boolean(pageState[key]?.hasMore), [pageState])
   const loadMore = useCallback(
@@ -608,6 +648,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ensureMediaLoaded,
       ensureRssLoaded,
       ensureAuditLogsLoaded,
+      ensurePlansLoaded,
+      ensurePaymentsLoaded,
       isResourceLoading,
       loadMore,
       hasMore,
@@ -745,16 +787,48 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         })
       },
       syncRssFeed: (feedId) => {
+        // A feed that's still being created has a temporary client id — wait for the real one.
+        if (!UUID_RE.test(feedId)) {
+          toast.info("This feed is still being saved — try again in a moment.")
+          return
+        }
         adminApi.operations.rssFeeds
-          .sync<Partial<RssFeed>>(feedId)
+          .sync<{ created?: number; skipped?: number; failed?: number; feed?: Partial<RssFeed> }>(feedId)
           .then((res) => {
+            const { created = 0, skipped = 0, failed = 0, feed } = res ?? {}
             setData((d) => ({
               ...d,
-              rss: d.rss.map((f) => (f.id === feedId ? { ...f, lastSync: new Date().toISOString(), ...res } : f)),
+              rss: d.rss.map((f) =>
+                f.id === feedId
+                  ? { ...f, lastSync: new Date().toISOString(), newLastSync: created, ...feed }
+                  : f,
+              ),
             }))
+            // New episodes landed as content — refetch the list next time it's opened.
+            if (created > 0) loadedRef.current.content = false
             pushActivity("rss", `Synced feed ${feedId}`, "RSS")
+            const summary = `${created} new, ${skipped} already imported${failed ? `, ${failed} failed` : ""}`
+            failed ? toast.warning(`Sync finished: ${summary}`) : toast.success(`Sync complete: ${summary}`)
           })
-          .catch((err) => reportError("sync this feed", err))
+          .catch((err) => {
+            // A failed sync leaves the feed in "error" on the server — mirror that locally.
+            if (err?.status === 502) {
+              setData((d) => ({ ...d, rss: d.rss.map((f) => (f.id === feedId ? { ...f, status: "error" as const } : f)) }))
+            }
+            reportError("sync this feed", err)
+          })
+      },
+      addRssFeed: (feed) => {
+        setData((d) => ({ ...d, rss: [feed, ...d.rss] }))
+        adminApi.operations.rssFeeds
+          .create<RssFeed>(feed)
+          .then((res) =>
+            setData((d) => ({ ...d, rss: d.rss.map((x) => (x.id === feed.id ? { ...feed, ...res } : x)) })),
+          )
+          .catch((err) => {
+            setData((d) => ({ ...d, rss: d.rss.filter((x) => x.id !== feed.id) }))
+            reportError("add this feed", err)
+          })
       },
 
       // ---- taxonomy: categories ----
@@ -888,7 +962,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateService: (id, patch) => {
         const previous = data.services
         setData((d) => ({ ...d, services: d.services.map((s) => (s.id === id ? { ...s, ...patch } : s)) }))
-        adminApi.operations.services.update(id, patch).catch((err) => {
+        // Send only what changed — the API treats PUT as a partial update.
+        const changed = changedFields(previous.find((x) => x.id === id), patch)
+        if (Object.keys(changed).length === 0) return
+        adminApi.operations.services.update(id, changed).catch((err) => {
           setData((d) => ({ ...d, services: previous }))
           reportError("save this service", err)
         })
@@ -924,7 +1001,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ...d,
           socialLinks: d.socialLinks.map((s) => (s.id === id ? { ...s, ...patch } : s)),
         }))
-        adminApi.operations.socialLinks.update(id, patch).catch((err) => {
+        // Send only what changed — the API treats PUT as a partial update.
+        const changed = changedFields(previous.find((x) => x.id === id), patch)
+        if (Object.keys(changed).length === 0) return
+        adminApi.operations.socialLinks.update(id, changed).catch((err) => {
           setData((d) => ({ ...d, socialLinks: previous }))
           reportError("save this social link", err)
         })
@@ -944,10 +1024,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         adminApi.operations.media
           .create<MediaAsset>(m)
           .then((res) =>
-            setData((d) => ({
-              ...d,
-              mediaAssets: d.mediaAssets.map((x) => (x.id === m.id ? { ...m, ...res } : x)),
-            })),
+            setData((d) => {
+              const key = (x: MediaAsset) => x.hash || x.url
+              const saved = { ...m, ...res }
+              return {
+                ...d,
+                // When the server reports a duplicate, the earlier copy is a duplicate too.
+                mediaAssets: d.mediaAssets.map((x) =>
+                  x.id === m.id
+                    ? saved
+                    : saved.isDuplicate && key(x) === key(saved)
+                      ? { ...x, isDuplicate: true }
+                      : x,
+                ),
+              }
+            }),
           )
           .catch((err) => {
             setData((d) => ({ ...d, mediaAssets: d.mediaAssets.filter((x) => x.id !== m.id) }))
@@ -960,7 +1051,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ...d,
           mediaAssets: d.mediaAssets.map((m) => (m.id === id ? { ...m, ...patch } : m)),
         }))
-        adminApi.operations.media.update(id, patch).catch((err) => {
+        // Send only what changed — the API treats PUT as a partial update.
+        const changed = changedFields(previous.find((x) => x.id === id), patch)
+        if (Object.keys(changed).length === 0) return
+        adminApi.operations.media.update(id, changed).catch((err) => {
           setData((d) => ({ ...d, mediaAssets: previous }))
           reportError("save this media item", err)
         })
@@ -1027,12 +1121,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         })
       },
 
-      // ---- plans / badges / api keys / backups (local only — no backend endpoint yet) ----
-      updatePlan: (id, patch) =>
+      // ---- plans (server) ----
+      updatePlan: (id, patch) => {
+        // The API wants `priceInr` and/or `active` — nothing else, and at least one.
+        const body: { priceInr?: number; active?: boolean } = {}
+        if (patch.priceINR !== undefined) body.priceInr = patch.priceINR
+        if (patch.active !== undefined) body.active = patch.active
+        if (Object.keys(body).length === 0) return
+        const previous = data.membershipPlans
         setData((d) => ({
           ...d,
           membershipPlans: d.membershipPlans.map((p) => (p.id === id ? { ...p, ...patch } : p)),
-        })),
+        }))
+        adminApi.memberships.plans
+          .update<Record<string, unknown>>(id, body)
+          .then((res) => {
+            if (!res || typeof res !== "object") return
+            const saved = normalizePlan(res)
+            setData((d) => ({
+              ...d,
+              membershipPlans: d.membershipPlans.map((p) =>
+                p.id === id ? { ...p, priceINR: saved.priceINR, active: saved.active } : p,
+              ),
+            }))
+          })
+          .catch((err) => {
+            setData((d) => ({ ...d, membershipPlans: previous }))
+            reportError("update this plan", err)
+          })
+      },
+
+      // ---- badges / api keys / backups (local only — no backend endpoint yet) ----
       addBadge: (b) => setData((d) => ({ ...d, badgeRules: [b, ...d.badgeRules] })),
       updateBadge: (id, patch) =>
         setData((d) => ({
@@ -1084,6 +1203,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     ensureMediaLoaded,
     ensureRssLoaded,
     ensureAuditLogsLoaded,
+    ensurePlansLoaded,
+    ensurePaymentsLoaded,
     isResourceLoading,
     loadMore,
     hasMore,

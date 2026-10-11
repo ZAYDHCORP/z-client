@@ -1,16 +1,18 @@
-import { useState } from "react"
-import { Settings as SettingsIcon } from "lucide-react"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { PageHeader } from "@/components/gate/ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import { useTheo } from "@/lib/gate/theocentric/store"
+import { useTheo, useTheoLoad } from "@/lib/gate/theocentric/store"
 
 export default function TheoSettingsPage() {
-  const { data, updateSettings, resetData } = useTheo()
+  const { data, updateSettings } = useTheo()
+  useTheoLoad("settings", "categories")
   const s = data.settings
+  const [saving, setSaving] = useState(false)
   const [verificationRequired, setVerificationRequired] = useState(s.verificationRequired)
   const [publicationRules, setPublicationRules] = useState(s.publicationRules)
   const [displayRules, setDisplayRules] = useState(s.displayRules)
@@ -18,11 +20,22 @@ export default function TheoSettingsPage() {
   const [defaultCategories, setDefaultCategories] = useState<string[]>(s.defaultCategories)
   const [defaultJourney, setDefaultJourney] = useState<string[]>(s.defaultJourney)
 
+  // Settings arrive asynchronously — sync the form once they land.
+  useEffect(() => {
+    setVerificationRequired(s.verificationRequired)
+    setPublicationRules(s.publicationRules)
+    setDisplayRules(s.displayRules)
+    setDefaultOrdering(s.defaultOrdering)
+    setDefaultCategories(s.defaultCategories)
+    setDefaultJourney(s.defaultJourney)
+  }, [s])
+
   function toggleCat(id: string) {
     setDefaultCategories((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
-  function save() {
-    updateSettings({
+  async function save() {
+    setSaving(true)
+    const ok = await updateSettings({
       verificationRequired,
       publicationRules,
       displayRules,
@@ -30,11 +43,8 @@ export default function TheoSettingsPage() {
       defaultCategories,
       defaultJourney,
     })
-  }
-  function reset() {
-    if (confirm("Reset all Theocentric & Doxology data to the seed dataset? This cannot be undone.")) {
-      resetData()
-    }
+    setSaving(false)
+    if (ok) toast.success("Settings saved")
   }
 
   return (
@@ -43,10 +53,7 @@ export default function TheoSettingsPage() {
         title="Settings"
         description="Configure verification, publication and display rules for the Theocentric & Doxology module."
         actions={
-          <>
-            <Button variant="outline" onClick={reset}>Reset to Seed</Button>
-            <Button onClick={save}>Save Settings</Button>
-          </>
+          <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save Settings"}</Button>
         }
       />
 
@@ -94,9 +101,6 @@ export default function TheoSettingsPage() {
           />
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          Data is stored locally in this browser (key <code>theo_admin_state_v1</code>). Use Export to back up.
-        </p>
       </div>
     </div>
   )

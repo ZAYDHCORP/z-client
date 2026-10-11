@@ -6,6 +6,7 @@ export default function DraftsPage() {
       title="Drafts"
       description="All unpublished draft content across every kind."
       kinds={["dua", "adkar", "quranic", "rabbana", "ruqiyah"]}
+      filters={{ status: "draft" }}
       predicate={(c) => c.status === "draft"}
       showKind
       hideAdd

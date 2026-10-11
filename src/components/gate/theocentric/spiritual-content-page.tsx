@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Copy, Pencil, Plus, Search, Star, Trash2 } from "lucide-react"
 import { PageHeader } from "@/components/gate/ui"
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { SpiritualEditor } from "./spiritual-editor"
-import { useTheo } from "@/lib/gate/theocentric/store"
+import { useTheo, useTheoContent, useTheoLoad, type ContentFilters } from "@/lib/gate/theocentric/store"
 import {
   ROUTINE_LABELS,
   type ContentKind,
@@ -49,6 +49,7 @@ export function SpiritualContentPage({
   predicate,
   showKind = false,
   hideAdd = false,
+  filters: baseFilters,
 }: {
   title: string
   description?: string
@@ -56,6 +57,8 @@ export function SpiritualContentPage({
   predicate?: (c: SpiritualContent) => boolean
   showKind?: boolean
   hideAdd?: boolean
+  /** Server-side filters this page always applies (e.g. `{ status: "published" }`). */
+  filters?: ContentFilters
 }) {
   const {
     data,
@@ -65,7 +68,11 @@ export function SpiritualContentPage({
     duplicateContent,
     removeContent,
     bulkAction,
+    hasMore,
+    loadMore,
+    isLoading,
   } = useTheo()
+  useTheoLoad("categories", "subcategories")
   const [q, setQ] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [verifyFilter, setVerifyFilter] = useState<string>("all")
@@ -74,25 +81,35 @@ export function SpiritualContentPage({
   const [editing, setEditing] = useState<SpiritualContent | null>(null)
   const [editOpen, setEditOpen] = useState(false)
 
+  // Search is sent to the server (debounced) so it reaches beyond the loaded page.
+  const [debouncedQ, setDebouncedQ] = useState("")
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 350)
+    return () => clearTimeout(t)
+  }, [q])
+
+  const serverFilters = useMemo<ContentFilters>(() => {
+    const f: ContentFilters = { ...baseFilters }
+    if (kinds.length === 1) f.kind = kinds[0]
+    if (statusFilter !== "all") f.status = statusFilter
+    if (catFilter !== "all") f.category = catFilter
+    if (debouncedQ) f.q = debouncedQ
+    return f
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(baseFilters), kinds.join(","), statusFilter, catFilter, debouncedQ])
+  useTheoContent(serverFilters)
+
   const catName = (id: string) =>
     data.categories.find((c) => c.id === id)?.name ?? "—"
 
   const rows = useMemo(() => {
+    // Status / category / kind / search are filtered by the server; what is left
+    // here is only what the API has no filter for (verification, "featured").
     let list = data.content.filter((c) => kinds.includes(c.kind))
     if (predicate) list = list.filter(predicate)
-    if (statusFilter !== "all") list = list.filter((c) => c.status === statusFilter)
     if (verifyFilter !== "all") list = list.filter((c) => c.verification === verifyFilter)
-    if (catFilter !== "all") list = list.filter((c) => c.category === catFilter)
-    const needle = q.trim().toLowerCase()
-    if (needle)
-      list = list.filter((c) =>
-        [c.title, c.arabic, c.transliteration, c.translation, c.tags.join(" ")]
-          .join(" ")
-          .toLowerCase()
-          .includes(needle),
-      )
     return [...list].sort((a, b) => a.displayOrder - b.displayOrder)
-  }, [data.content, kinds, predicate, statusFilter, verifyFilter, catFilter, q])
+  }, [data.content, kinds, predicate, verifyFilter])
 
   function openNew() {
     if (kinds.length === 1) {
@@ -180,7 +197,7 @@ export function SpiritualContentPage({
           <Button size="sm" variant="outline" onClick={() => { bulkAction(selected, "archive"); setSelected([]) }}>
             Archive
           </Button>
-          <Button size="sm" variant="destructive" onClick={() => { selected.forEach((id) => removeContent(id)); setSelected([]) }}>
+          <Button size="sm" variant="destructive" onClick={() => { if (confirm(`Delete ${selected.length} selected item(s)? Items inside a collection can't be deleted.`)) { selected.forEach((id) => removeContent(id)); setSelected([]) } }}>
             Delete
           </Button>
         </div>
@@ -294,13 +311,21 @@ export function SpiritualContentPage({
             {rows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={showKind ? 8 : 7} className="py-10 text-center text-muted-foreground">
-                  No content found.
+                  {isLoading("content") ? "Loading content…" : "No content found."}
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
+
+      {hasMore("content") && (
+        <div className="mt-4 flex justify-center">
+          <Button variant="outline" size="sm" disabled={isLoading("content")} onClick={() => loadMore("content")}>
+            {isLoading("content") ? "Loading…" : "Load more"}
+          </Button>
+        </div>
+      )}
 
       <SpiritualEditor
         kind={editing ? editing.kind : kinds[0]}

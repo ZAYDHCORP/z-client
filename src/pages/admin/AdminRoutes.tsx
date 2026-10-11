@@ -51,6 +51,7 @@ import AdminTheocentricEveningAdhkars from "@/pages/admin/theocentric/evening-ad
 import AdminTheocentricExport from "@/pages/admin/theocentric/export/page";
 import AdminTheocentricFeatured from "@/pages/admin/theocentric/featured/page";
 import AdminTheocentricImport from "@/pages/admin/theocentric/import/page";
+import AdminTheocentricMilestones from "@/pages/admin/theocentric/milestones/page";
 import AdminTheocentricMorningAdhkars from "@/pages/admin/theocentric/morning-adhkars/page";
 import AdminTheocentricPublished from "@/pages/admin/theocentric/published/page";
 import AdminTheocentricQuranicSupplications from "@/pages/admin/theocentric/quranic-supplications/page";
@@ -134,6 +135,7 @@ export default function AdminRoutes() {
           <Route path="export" element={<AdminTheocentricExport />} />
           <Route path="featured" element={<AdminTheocentricFeatured />} />
           <Route path="import" element={<AdminTheocentricImport />} />
+          <Route path="milestones" element={<AdminTheocentricMilestones />} />
           <Route path="morning-adhkars" element={<AdminTheocentricMorningAdhkars />} />
           <Route path="published" element={<AdminTheocentricPublished />} />
           <Route path="quranic-supplications" element={<AdminTheocentricQuranicSupplications />} />

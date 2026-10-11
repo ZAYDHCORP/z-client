@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
-import { Pencil, RefreshCw, Rss, Star, CheckCircle2 } from "lucide-react"
+import { Pencil, Plus, RefreshCw, Rss, Trash2, CheckCircle2 } from "lucide-react"
 import { PageHeader, StatusBadge } from "@/components/gate/ui"
 import { useGate } from "@/lib/gate/store"
 import { PLATFORMS, PLATFORM_MAP } from "@/lib/gate/platforms"
-import type { PlatformId, PodcastEpisode } from "@/lib/gate/types"
+import type { PlatformId, PodcastEpisode, RssFeed } from "@/lib/gate/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -34,7 +34,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 
 export default function RssManagerPage() {
-  const { data, syncRssFeed, ensureContentLoaded, ensureCategoriesLoaded, ensureRssLoaded } = useGate()
+  const { data, syncRssFeed, addRssFeed, updateRssFeed, removeRssFeed, ensureContentLoaded, ensureCategoriesLoaded, ensureRssLoaded, loadMore, hasMore, isResourceLoading } = useGate()
 
   useEffect(() => {
     ensureContentLoaded()
@@ -45,6 +45,15 @@ export default function RssManagerPage() {
   const [platform, setPlatform] = useState("all")
   const [editing, setEditing] = useState<PodcastEpisode | null>(null)
   const [open, setOpen] = useState(false)
+  const [feedOpen, setFeedOpen] = useState(false)
+  const [syncing, setSyncing] = useState<string | null>(null)
+
+  const runSync = (id: string) => {
+    setSyncing(id)
+    syncRssFeed(id)
+    // The store reports the result (or error) itself; just release the button.
+    setTimeout(() => setSyncing((cur) => (cur === id ? null : cur)), 1500)
+  }
 
   const episodes = useMemo(
     () =>
@@ -62,6 +71,12 @@ export default function RssManagerPage() {
         title="RSS Manager"
         description="Automatic RSS fetching & synchronisation. Store actual enclosure audio URLs, edit metadata and control publishing per platform."
       />
+
+      <div className="mb-3 flex justify-end">
+        <Button size="sm" onClick={() => setFeedOpen(true)}>
+          <Plus className="mr-1.5 h-3.5 w-3.5" /> Add Feed
+        </Button>
+      </div>
 
       {/* Feed cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -85,18 +100,29 @@ export default function RssManagerPage() {
                   Last sync: {f.lastSync ? new Date(f.lastSync).toLocaleString() : "—"}
                 </p>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" className="flex-1" onClick={() => { syncRssFeed(f.id); toast.success(`${m.name} synced`) }}>
-                    <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Sync Now
+                  <Button size="sm" className="flex-1" disabled={syncing === f.id || f.id.startsWith("rss_")} onClick={() => runSync(f.id)}>
+                    <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${syncing === f.id ? "animate-spin" : ""}`} /> Sync Now
                   </Button>
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Switch checked={f.autoSync} /> Auto
+                    <Switch checked={f.autoSync} onCheckedChange={(v) => updateRssFeed(f.id, { autoSync: v })} /> Auto
                   </span>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled={f.id.startsWith("rss_")} onClick={() => removeRssFeed(f.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           )
         })}
       </div>
+
+      {hasMore("rss") && (
+        <div className="mt-3 flex justify-center">
+          <Button variant="outline" size="sm" disabled={isResourceLoading("rss")} onClick={() => loadMore("rss")}>
+            {isResourceLoading("rss") ? "Loading…" : "Load more feeds"}
+          </Button>
+        </div>
+      )}
 
       {/* Episodes */}
       <div className="mb-4 mt-6 flex items-center gap-3">
@@ -151,6 +177,18 @@ export default function RssManagerPage() {
         </Table>
       </div>
 
+      <Dialog open={feedOpen} onOpenChange={setFeedOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add RSS Feed</DialogTitle>
+          </DialogHeader>
+          <FeedForm
+            onCancel={() => setFeedOpen(false)}
+            onSave={(feed) => { addRssFeed(feed); setFeedOpen(false) }}
+          />
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -159,6 +197,53 @@ export default function RssManagerPage() {
           {editing && <EpisodeEditor episode={editing} onClose={() => setOpen(false)} />}
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+function FeedForm({ onSave, onCancel }: { onSave: (f: RssFeed) => void; onCancel: () => void }) {
+  const [platform, setPlatform] = useState<PlatformId>("IPN")
+  const [title, setTitle] = useState("")
+  const [url, setUrl] = useState("")
+  const valid = title.trim().length > 0 && /^https?:\/\//i.test(url.trim())
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <Label className="text-xs">Platform</Label>
+        <Select value={platform} onValueChange={(v) => setPlatform(v as PlatformId)}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>{PLATFORMS.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Title</Label>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="IPN Gate Podcast" />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Feed URL</Label>
+        <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…/rss" />
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button
+          disabled={!valid}
+          onClick={() =>
+            onSave({
+              id: `rss_${Date.now().toString(36)}`,
+              platform,
+              title: title.trim(),
+              url: url.trim(),
+              status: "healthy",
+              totalEpisodes: 0,
+              newLastSync: 0,
+              autoSync: false,
+              frequency: "daily",
+            })
+          }
+        >
+          Add Feed
+        </Button>
+      </div>
     </div>
   )
 }

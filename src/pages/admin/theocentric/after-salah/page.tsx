@@ -1,10 +1,9 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { Clock } from "lucide-react"
 import { PageHeader } from "@/components/gate/ui"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -12,14 +11,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useTheo } from "@/lib/gate/theocentric/store"
+import { useTheo, useTheoLoad } from "@/lib/gate/theocentric/store"
+import { ContentPicker, ContentSearchInput, useContentSearch } from "@/components/gate/theocentric/content-picker"
 import type { AfterSalahEntry, SalahName } from "@/lib/gate/theocentric/types"
 
 const SALAH: SalahName[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
 
 export default function AfterSalahPage() {
-  const { data, updateAfterSalah } = useTheo()
+  const { data, saveAfterSalah } = useTheo()
+  useTheoLoad("afterSalah", "collections")
+  const { q, setQ } = useContentSearch()
   const [entries, setEntries] = useState<AfterSalahEntry[]>(data.afterSalah)
+  const [saving, setSaving] = useState(false)
+
+  // Configuration arrives asynchronously — sync the editable copy once it lands.
+  useEffect(() => setEntries(data.afterSalah), [data.afterSalah])
 
   function setEntry(salah: SalahName, patch: Partial<AfterSalahEntry>) {
     setEntries((prev) => {
@@ -29,8 +35,9 @@ export default function AfterSalahPage() {
     })
   }
   function toggleItem(salah: SalahName, contentId: string) {
-    setEntries((prev) =>
-      prev.map((e) => {
+    setEntries((prev) => {
+      if (!prev.some((e) => e.salah === salah)) prev = [...prev, { salah, collectionId: null, items: [] }]
+      return prev.map((e) => {
         if (e.salah !== salah) return e
         const has = e.items.some((i) => i.contentId === contentId)
         return {
@@ -39,11 +46,21 @@ export default function AfterSalahPage() {
             ? e.items.filter((i) => i.contentId !== contentId)
             : [...e.items, { contentId, order: e.items.length + 1, required: false }],
         }
-      }),
+      })
+    })
+  }
+  function setItem(salah: SalahName, contentId: string, patch: { required?: boolean }) {
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.salah === salah ? { ...e, items: e.items.map((i) => (i.contentId === contentId ? { ...i, ...patch } : i)) } : e,
+      ),
     )
   }
-  function save() {
-    updateAfterSalah(entries)
+  async function save() {
+    setSaving(true)
+    const ok = await saveAfterSalah(entries)
+    setSaving(false)
+    if (ok) toast.success("After-salah configuration saved")
   }
 
   return (
@@ -51,8 +68,12 @@ export default function AfterSalahPage() {
       <PageHeader
         title="After Salah"
         description="Configure the adhkars and supplications shown after each of the five prayers."
-        actions={<Button onClick={save}>Save Configuration</Button>}
+        actions={<Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save Configuration"}</Button>}
       />
+
+      <div className="mb-4 max-w-md">
+        <ContentSearchInput q={q} setQ={setQ} />
+      </div>
 
       <div className="space-y-4">
         {SALAH.map((s) => {
@@ -77,33 +98,13 @@ export default function AfterSalahPage() {
                 </div>
               </div>
 
-              <div className="mt-3 max-h-52 space-y-1 overflow-y-auto rounded-lg border border-border p-2">
-                {data.content.map((c) => {
-                  const item = entry?.items.find((i) => i.contentId === c.id)
-                  return (
-                    <label key={c.id} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent/40">
-                      <input type="checkbox" checked={!!item} onChange={() => toggleItem(s, c.id)} />
-                      <span className="flex-1 truncate">{c.title || "Untitled"}</span>
-                      {item && (
-                        <label className="flex items-center gap-1 text-xs">
-                          <Switch
-                            checked={item.required}
-                            onCheckedChange={(v) =>
-                              setEntries((prev) =>
-                                prev.map((e) =>
-                                  e.salah === s
-                                    ? { ...e, items: e.items.map((i) => (i.contentId === c.id ? { ...i, required: v } : i)) }
-                                    : e,
-                                ),
-                              )
-                            }
-                          />
-                          Req
-                        </label>
-                      )}
-                    </label>
-                  )
-                })}
+              <div className="mt-3">
+                <ContentPicker
+                  className="max-h-52"
+                  items={entry?.items ?? []}
+                  onToggle={(id) => toggleItem(s, id)}
+                  onChange={(id, patch) => setItem(s, id, patch)}
+                />
               </div>
             </div>
           )

@@ -1,11 +1,15 @@
 import { CrudTable } from "@/components/gate/crud-table"
-import { useTheo } from "@/lib/gate/theocentric/store"
+import { useTheo, useTheoLoad } from "@/lib/gate/theocentric/store"
 import type { TheoReference } from "@/lib/gate/theocentric/types"
 
 export default function TheoReferencesPage() {
-  const { data, addReference, updateReference, removeReference } = useTheo()
+  const { data, addReference, updateReference, removeReference, loadMore, hasMore, isLoading } = useTheo()
+  useTheoLoad("references")
   return (
     <CrudTable
+      onLoadMore={() => loadMore("references")}
+      hasMore={hasMore("references")}
+      loadingMore={isLoading("references")}
       title="References"
       description="Authoritative Qur'an and Hadith sources used to verify content."
       rows={data.references}
