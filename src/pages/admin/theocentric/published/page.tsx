@@ -4,7 +4,7 @@ export default function PublishedPage() {
   return (
     <SpiritualContentPage
       title="Published"
-      description="Live content visible to users across every kind."
+      description="Content that is live for users."
       kinds={["dua", "adkar", "quranic", "rabbana", "ruqiyah"]}
       filters={{ status: "published" }}
       predicate={(c) => c.status === "published"}

@@ -65,10 +65,10 @@ export default function LearningAnalyticsPage() {
     <div>
       <PageHeader
         title="Learning Analytics"
-        description="Reading and listening engagement, streaks and learning progress across the • Gate libraries."
+        description="Reading and listening engagement across the • Gate libraries."
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Total Reading Hours" value={totals.reading.toFixed(0)} icon={<BookOpen className="h-4 w-4" />} accent="#10b981" />
         <StatCard label="Total Listening Hours" value={totals.listening.toFixed(0)} icon={<Headphones className="h-4 w-4" />} accent="#8b5cf6" />
         <StatCard label="Learning Hours" value={totals.total.toFixed(0)} icon={<GraduationCap className="h-4 w-4" />} accent="#0ea5e9" />
@@ -77,7 +77,7 @@ export default function LearningAnalyticsPage() {
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="text-base">Learning Hours by Platform</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Learning Hours by Platform</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={perPlatform}>
@@ -92,7 +92,7 @@ export default function LearningAnalyticsPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Reading vs Listening</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Reading vs Listening</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={[{ name: "Mix", reading: totals.reading, listening: totals.listening }]}>
@@ -108,7 +108,7 @@ export default function LearningAnalyticsPage() {
       </div>
 
       <Card className="mt-4">
-        <CardHeader><CardTitle className="text-base">Top Learners</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Top Learners</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>

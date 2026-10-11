@@ -75,25 +75,25 @@ export default function ContentAuditPage() {
     <div>
       <PageHeader
         title="Content Audit"
-        description="Automated checks for missing fields, duplicates, missing references and verification gaps across the content loaded so far. Click a row to fix it."
+        description="Finds missing text, duplicates, missing sources and unverified items."
       />
 
       <div className="mb-4 grid grid-cols-3 gap-3">
-        <div className="rounded-xl border border-border bg-card p-3 text-center">
+        <div className="gate-surface p-3 text-center">
           <p className="text-2xl font-semibold text-rose-600">{issues.filter((i) => i.severity === "high").length}</p>
           <p className="text-xs text-muted-foreground">High severity</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-3 text-center">
+        <div className="gate-surface p-3 text-center">
           <p className="text-2xl font-semibold text-amber-600">{issues.filter((i) => i.severity === "medium").length}</p>
           <p className="text-xs text-muted-foreground">Medium severity</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-3 text-center">
+        <div className="gate-surface p-3 text-center">
           <p className="text-2xl font-semibold text-blue-600">{issues.filter((i) => i.severity === "low").length}</p>
           <p className="text-xs text-muted-foreground">Low severity</p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
+      <div className="gate-surface overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

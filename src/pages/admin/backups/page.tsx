@@ -20,7 +20,7 @@ export default function BackupsPage() {
     <div>
       <PageHeader
         title="Backups"
-        description="Automated and on-demand snapshots of the • Gate database, media and configuration. Restore to any verified point."
+        description="Database and media snapshots."
         actions={
           <Button onClick={() => { createBackup(); toast.success("Backup created") }}>
             <Plus className="mr-1.5 h-4 w-4" /> Create Backup
@@ -28,7 +28,7 @@ export default function BackupsPage() {
         }
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card><CardContent className="space-y-1 p-4">
           <p className="text-2xl font-semibold">{data.backups.length}</p>
           <p className="text-xs text-muted-foreground">Total snapshots</p>

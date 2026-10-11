@@ -73,7 +73,7 @@ export default function ApiManagementPage() {
     <div>
       <PageHeader
         title="API Management"
-        description="Issue and revoke programmatic access keys for the • Gate public API, RSS ingestion and partner integrations."
+        description="Create and revoke API keys."
         actions={
           <Button onClick={() => setOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" /> Generate Key
@@ -81,7 +81,7 @@ export default function ApiManagementPage() {
         }
       />
 
-      <div className="rounded-xl border border-border bg-card">
+      <div className="gate-surface overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

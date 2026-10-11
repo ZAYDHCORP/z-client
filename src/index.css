@@ -14,6 +14,8 @@
   --font-sans: var(--font-manrope);
   --font-serif: var(--font-cormorant);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -69,6 +71,8 @@
   --border: rgba(0, 0, 0, 0.1);
   --input: rgba(0, 0, 0, 0.12);
   --ring: #9a6d35;
+  --gold: #9a6d35;
+  --gold-soft: rgba(154, 109, 53, 0.12);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -103,6 +107,8 @@
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.15);
   --ring: #d5a85c;
+  --gold: #d5a85c;
+  --gold-soft: rgba(213, 168, 92, 0.14);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -301,3 +307,34 @@ body {
 
 .line-clamp-3 { -webkit-line-clamp: 3; }
 .line-clamp-4 { -webkit-line-clamp: 4; }
+
+
+/* ── Premium surface system ───────────────────────────────────────────── */
+@layer components {
+  /* The one card surface used by every box, table wrapper and panel. */
+  .gate-surface {
+    @apply rounded-2xl border border-border bg-card;
+    box-shadow:
+      0 1px 2px rgba(20, 15, 5, 0.04),
+      0 12px 28px -18px rgba(20, 15, 5, 0.18);
+  }
+  .dark .gate-surface {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 45%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.045),
+      0 18px 36px -22px rgba(0, 0, 0, 0.85);
+  }
+  .gate-surface-hover {
+    @apply transition-all duration-200;
+  }
+  .gate-surface-hover:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--gold) 40%, var(--border));
+  }
+}
+
+/* Slim, quiet scrollbars inside the admin. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 35%, transparent) transparent;
+}

@@ -4,7 +4,7 @@ export default function MorningAdhkarPage() {
   return (
     <SpiritualContentPage
       title="Morning Adhkars"
-      description="Adhkars assigned to the Morning routine."
+      description="Adhkars for the morning."
       kinds={["adkar"]}
       filters={{ routine: "morning" }}
       predicate={(c) => c.routines.includes("morning")}

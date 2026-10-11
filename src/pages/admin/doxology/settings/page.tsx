@@ -21,14 +21,14 @@ export default function DoxologySettingsPage() {
     <div>
       <PageHeader
         title="Alarm Settings"
-        description="Configure default reminder timings applied to new users and used by 'Reset to default'. 30-minute pre-Salah alerts apply to the five Fard prayers."
+        description="Default reminder timings for new users."
       />
 
       <div className="space-y-3">
         {ALARM_DEFS.map((d) => {
           const cfg = data.defaults.settings[d.type]
           return (
-            <div key={d.type} className="rounded-xl border border-border bg-card p-4">
+            <div key={d.type} className="gate-surface p-4">
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex w-40 items-center gap-2">
                   <Clock className="h-4 w-4 text-primary" />

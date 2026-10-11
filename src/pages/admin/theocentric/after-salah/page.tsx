@@ -67,7 +67,7 @@ export default function AfterSalahPage() {
     <div>
       <PageHeader
         title="After Salah"
-        description="Configure the adhkars and supplications shown after each of the five prayers."
+        description="What appears after each of the five prayers."
         actions={<Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save Configuration"}</Button>}
       />
 
@@ -79,7 +79,7 @@ export default function AfterSalahPage() {
         {SALAH.map((s) => {
           const entry = entries.find((e) => e.salah === s)
           return (
-            <div key={s} className="rounded-xl border border-border bg-card p-4">
+            <div key={s} className="gate-surface p-4">
               <div className="flex items-center gap-3">
                 <Clock className="h-4 w-4 text-primary" />
                 <h3 className="font-semibold">{s}</h3>

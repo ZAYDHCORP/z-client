@@ -50,7 +50,7 @@ export default function AuditLogsPage() {
     <div>
       <PageHeader
         title="Audit Logs"
-        description="Immutable record of every administrative action across content, users, payments, RSS, backups and security."
+        description="A record of administrative actions in the dashboard."
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">

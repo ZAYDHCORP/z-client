@@ -4,7 +4,7 @@ export default function FeaturedPage() {
   return (
     <SpiritualContentPage
       title="Featured Content"
-      description="Content promoted in featured slots across the user experience. Toggle the star on any item to feature or unfeature."
+      description="Content promoted in featured slots."
       kinds={["dua", "adkar", "quranic", "rabbana", "ruqiyah"]}
       predicate={(c) => c.featured}
       showKind

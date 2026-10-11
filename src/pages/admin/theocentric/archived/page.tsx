@@ -4,7 +4,7 @@ export default function ArchivedPage() {
   return (
     <SpiritualContentPage
       title="Archived"
-      description="Archived content retained for records but hidden from users."
+      description="Archived content, hidden from users."
       kinds={["dua", "adkar", "quranic", "rabbana", "ruqiyah"]}
       filters={{ status: "archived" }}
       predicate={(c) => c.status === "archived"}

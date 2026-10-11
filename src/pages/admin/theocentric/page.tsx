@@ -70,17 +70,17 @@ export default function TheoDashboard() {
     <div>
       <PageHeader
         title="Theocentric & Doxology"
-        description="Administer Dua, Adhkars, Quranic Reminders, 40 Rabbana, Ruqiyah and their structure."
+        description="Duas, adhkars, Quranic reminders, 40 Rabbana and Ruqiyah."
         actions={
           <Link to="/admin/theocentric/duas">
-            <span className="inline-flex h-9 items-center rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground">
+            <span className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">
               + New Dua
             </span>
           </Link>
         }
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Total Content" value={show(total)} icon={<Layers className="h-4 w-4" />} accent="#7c3aed" />
         <StatCard label="Published" value={show(counts.published)} icon={<BookText className="h-4 w-4" />} accent="#059669" />
         <StatCard label="Drafts" value={show(counts.drafts)} icon={<Star className="h-4 w-4" />} accent="#2563eb" />
@@ -95,7 +95,7 @@ export default function TheoDashboard() {
               <Link
                 key={m.kind}
                 to={m.href}
-                className="rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-sm"
+                className="gate-surface gate-surface-hover p-4 "
               >
                 <div className="flex items-center justify-between">
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -110,7 +110,7 @@ export default function TheoDashboard() {
 
           <div className="mt-6">
             <SectionTitle>Recent Activity</SectionTitle>
-            <div className="rounded-xl border border-border bg-card">
+            <div className="gate-surface">
               {recent.map((c) => (
                 <Link
                   key={c.id}
@@ -133,19 +133,19 @@ export default function TheoDashboard() {
         <div>
           <SectionTitle>Structure</SectionTitle>
           <div className="space-y-3">
-            <Link to="/admin/theocentric/collections" className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:shadow-sm">
+            <Link to="/admin/theocentric/collections" className="flex items-center justify-between gate-surface gate-surface-hover p-4 ">
               <span className="text-sm font-medium">Collections / Routines</span>
               <span className="text-lg font-semibold">{show(counts.collections)}</span>
             </Link>
-            <Link to="/admin/theocentric/categories" className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:shadow-sm">
+            <Link to="/admin/theocentric/categories" className="flex items-center justify-between gate-surface gate-surface-hover p-4 ">
               <span className="text-sm font-medium">Categories</span>
               <span className="text-lg font-semibold">{show(counts.categories)}</span>
             </Link>
-            <Link to="/admin/theocentric/references" className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:shadow-sm">
+            <Link to="/admin/theocentric/references" className="flex items-center justify-between gate-surface gate-surface-hover p-4 ">
               <span className="text-sm font-medium">References</span>
               <span className="text-lg font-semibold">{show(counts.references)}</span>
             </Link>
-            <Link to="/admin/theocentric/featured" className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:shadow-sm">
+            <Link to="/admin/theocentric/featured" className="flex items-center justify-between gate-surface gate-surface-hover p-4 ">
               <span className="text-sm font-medium">Featured</span>
               <span className="text-xs text-muted-foreground">View</span>
             </Link>

@@ -38,13 +38,13 @@ export default function SettingsPage() {
     <div>
       <PageHeader
         title="Settings"
-        description="Global configuration for branding, appearance, commerce, SEO defaults, media and security policy."
+        description="Branding, appearance, commerce, SEO and media defaults."
         actions={<Button onClick={save}>Save Settings</Button>}
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="text-base">Brand & Appearance</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Brand & Appearance</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Site Name</Label>
@@ -80,7 +80,7 @@ export default function SettingsPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base">Commerce & Automation</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Commerce & Automation</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
@@ -104,7 +104,7 @@ export default function SettingsPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base">SEO / AEO Defaults</CardTitle></CardHeader>
+          <CardHeader><CardTitle>SEO / AEO Defaults</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -130,7 +130,7 @@ export default function SettingsPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base">Media & Security</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Media & Security</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <Label className="text-xs">Max Upload Size (MB)</Label>

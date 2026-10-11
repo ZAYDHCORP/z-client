@@ -50,7 +50,7 @@ export default function SearchAdminPage() {
     <div>
       <PageHeader
         title="Search & Discovery"
-        description="Global search administration across titles, metadata, categories, tags and platforms."
+        description="Search across all content."
       />
       <div className="relative max-w-xl">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -100,9 +100,6 @@ export default function SearchAdminPage() {
                 <Badge key={f} variant="outline">{f}</Badge>
               ))}
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              The search index updates automatically whenever content is created, published, unpublished or archived.
-            </p>
           </CardContent>
         </Card>
       </div>

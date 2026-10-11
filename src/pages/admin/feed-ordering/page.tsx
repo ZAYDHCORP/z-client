@@ -56,7 +56,7 @@ export default function FeedOrderingPage() {
     <div>
       <PageHeader
         title="Feed Ordering"
-        description="Manually reorder, pin and feature content per platform. Numbering follows publishing order but can be overridden."
+        description="Reorder, pin and feature content for each platform."
       />
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <Select value={platform} onValueChange={setPlatform}>
@@ -79,7 +79,7 @@ export default function FeedOrderingPage() {
 
       <div className="space-y-2">
         {list.map((item, i) => (
-          <div key={item.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
+          <div key={item.id} className="flex items-center gap-3 gate-surface p-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-sm font-semibold tabular-nums">
               {String(i + 1).padStart(2, "0")}
             </span>

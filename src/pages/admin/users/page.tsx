@@ -60,11 +60,6 @@ export default function UsersPage() {
       <PageHeader
         title="Users"
         description="Manage accounts, membership state, roles and account status."
-        actions={
-          <Button onClick={() => toast.info("Bulk import available via API")}>
-            <Plus className="mr-1.5 h-4 w-4" /> Invite User
-          </Button>
-        }
       />
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <div className="relative sm:max-w-xs">
@@ -90,7 +85,7 @@ export default function UsersPage() {
         </Select>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
+      <div className="gate-surface overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

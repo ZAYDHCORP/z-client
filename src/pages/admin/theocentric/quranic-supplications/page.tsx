@@ -4,7 +4,7 @@ export default function QuranicSupplicationsPage() {
   return (
     <SpiritualContentPage
       title="Quranic Reminders"
-      description="Verses and supplications sourced directly from the Qur'an with surah and ayah references."
+      description="Verses and supplications from the Qur'an."
       kinds={["quranic"]}
     />
   )

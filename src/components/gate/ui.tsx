@@ -1,3 +1,4 @@
+import { Inbox } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ContentStatus, PlatformId, VerificationStatus } from "@/lib/gate/types"
 import { PLATFORM_MAP } from "@/lib/gate/platforms"
@@ -28,19 +29,21 @@ export function StatusBadge({
   className,
   label,
 }: {
-  status: string
+  status?: string | null
   className?: string
   label?: string
 }) {
+  const key = status ?? "unknown"
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
-        statusStyles[status] ?? "bg-muted text-muted-foreground",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset ring-current/15",
+        statusStyles[key] ?? "bg-muted text-muted-foreground",
         className,
       )}
     >
-      {label ?? status.replace(/_/g, " ")}
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
+      {label ?? key.replace(/_/g, " ")}
     </span>
   )
 }
@@ -56,10 +59,11 @@ export function VerifyBadge({ status }: { status: VerificationStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset ring-current/15",
         verifyStyles[status],
       )}
     >
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
       {status.replace(/_/g, " ")}
     </span>
   )
@@ -85,14 +89,15 @@ export function PageHeader({
   actions?: ReactNode
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="font-serif text-2xl font-semibold tracking-tight">{title}</h1>
+    <div className="mb-6 flex flex-col gap-3 border-b border-border/70 pb-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <span className="mb-2.5 block h-[3px] w-8 rounded-full bg-gold" />
+        <h1 className="font-serif text-[1.75rem] leading-[1.1] font-semibold tracking-tight">{title}</h1>
         {description && (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
         )}
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2.5">{actions}</div>}
     </div>
   )
 }
@@ -112,33 +117,44 @@ export function StatCard({
   accent?: string
   hint?: string
 }) {
+  // Accents are hex colours — tint them for the icon chip so it reads as a
+  // soft badge instead of a solid block.
+  const tint = accent && accent.startsWith("#") && accent.length === 7
   return (
-    <div className="rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-sm">
-      <div className="flex items-start justify-between">
-        <p className="text-sm text-muted-foreground">{label}</p>
+    <div className="gate-surface gate-surface-hover p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
         {Icon && (
           <span
-            className="flex h-8 w-8 items-center justify-center rounded-lg"
-            style={{ background: accent ?? "var(--accent)", color: accent ? "#fff" : undefined }}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-black/5 dark:ring-white/10 [&_svg]:h-3.5 [&_svg]:w-3.5"
+            style={{
+              background: tint ? `${accent}24` : "var(--gold-soft)",
+              color: tint ? accent : "var(--gold)",
+            }}
           >
             {Icon}
           </span>
         )}
       </div>
-      <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
-      {delta && (
-        <p className="mt-1 text-xs text-muted-foreground">
-          <span className="text-emerald-600 dark:text-emerald-400">{delta}</span>{" "}
-          {hint ?? "vs last period"}
-        </p>
-      )}
+      <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <p className="text-2xl leading-none font-semibold tracking-tight tabular-nums">{value}</p>
+        {delta && (
+          <span
+            title={hint ?? "vs last period"}
+            className="rounded-full bg-emerald-500/12 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400"
+          >
+            {delta}
+          </span>
+        )}
+      </div>
     </div>
   )
 }
 
 export function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+    <h2 className="mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+      <span className="h-1 w-1 rounded-full bg-gold" />
       {children}
     </h2>
   )
@@ -173,7 +189,10 @@ export function EmptyState({
   action?: ReactNode
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/50 px-6 py-14 text-center">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/40 px-6 py-16 text-center">
+      <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gold-soft text-gold">
+        <Inbox className="h-5 w-5" />
+      </span>
       <p className="text-base font-medium">{title}</p>
       {description && (
         <p className="mt-1 max-w-sm text-sm text-muted-foreground">

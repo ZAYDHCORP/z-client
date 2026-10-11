@@ -16,7 +16,7 @@ export default function RegionsPage() {
       hasMore={hasMore("regions")}
       loadingMore={isResourceLoading("regions")}
       title="Regions"
-      description="Regional and international tags for geographic discovery."
+      description="Regions used to group content by geography."
       rows={data.regions}
       searchKeys={["name", "slug"]}
       newRecord={(): Region => ({ id: `reg_${Date.now().toString(36)}`, name: "", slug: "", type: "regional", usage: 0 })}

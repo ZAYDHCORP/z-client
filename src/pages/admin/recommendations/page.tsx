@@ -42,7 +42,7 @@ export default function RecommendationsPage() {
     <div>
       <PageHeader
         title="Recommendations & Discover"
-        description="Personalised Gate Feed engine using behavioural signals. No likes, comments or followers."
+        description="Choose what is recommended in the Gate feed."
       />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
@@ -88,9 +88,6 @@ export default function RecommendationsPage() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Related content, similar tags and trending items are computed server-side and respect platform boundaries and premium entitlement.
-            </p>
           </CardContent>
         </Card>
       </div>

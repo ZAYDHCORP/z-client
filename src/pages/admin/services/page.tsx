@@ -20,7 +20,7 @@ export default function ServicesPage() {
       hasMore={hasMore("services")}
       loadingMore={isResourceLoading("services")}
       title="Services"
-      description="Platform-specific service pages with their own landing content, enquiry CTAs and WhatsApp contact."
+      description="Services offered on each platform."
       rows={data.services}
       searchKeys={["title", "category", "slug"]}
       newRecord={(): ServiceRecord => ({

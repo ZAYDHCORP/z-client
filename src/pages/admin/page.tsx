@@ -53,6 +53,7 @@ export default function OverviewPage() {
     ensureCategoriesLoaded,
     ensureRssLoaded,
     ensurePaymentsLoaded,
+    ensureAuditLogsLoaded,
   } = useGate()
 
   useEffect(() => {
@@ -61,7 +62,8 @@ export default function OverviewPage() {
     ensureCategoriesLoaded()
     ensureRssLoaded()
     ensurePaymentsLoaded()
-  }, [ensureContentLoaded, ensureUsersLoaded, ensureCategoriesLoaded, ensureRssLoaded, ensurePaymentsLoaded])
+    ensureAuditLogsLoaded()
+  }, [ensureContentLoaded, ensureUsersLoaded, ensureCategoriesLoaded, ensureRssLoaded, ensurePaymentsLoaded, ensureAuditLogsLoaded])
 
   const stats = useMemo(() => {
     const users = data.users
@@ -167,7 +169,7 @@ export default function OverviewPage() {
     <div>
       <PageHeader
         title="Command Centre"
-        description="Unified control for IPN, IGC, IFR and ISR — content, members, payments and platform health."
+        description="Content, members, payments and platform health at a glance."
         actions={
           <>
             <Button variant="outline" asChild>
@@ -185,12 +187,12 @@ export default function OverviewPage() {
       />
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <StatCard label="Total Users" value={stats.users.toLocaleString()} delta="+6.2%" icon={<Users className="h-4 w-4" />} accent="#0ea5e9" />
         <StatCard label="Active Members" value={stats.activeMembers.toLocaleString()} delta="+3.1%" icon={<CreditCard className="h-4 w-4" />} accent="#10b981" />
         <StatCard label="Revenue" value={inr(stats.revenue)} delta="+12.4%" icon={<IndianRupee className="h-4 w-4" />} accent="#f59e0b" />
         <StatCard label="Renewals" value={stats.renewals.toLocaleString()} delta="+4.8%" icon={<RefreshCw className="h-4 w-4" />} accent="#8b5cf6" />
-        <StatCard label="Content Published" value={stats.published.toLocaleString()} delta="+18" icon={<FileCheck2 className="h-4 w-4" />} accent="#ec4899" />
+        <StatCard label="Published" value={stats.published.toLocaleString()} delta="+18" icon={<FileCheck2 className="h-4 w-4" />} accent="#ec4899" />
         <StatCard
           label="RSS Sync"
           value={
@@ -206,14 +208,14 @@ export default function OverviewPage() {
       </div>
 
       {/* Charts */}
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Revenue trend</CardTitle>
+            <CardTitle>Revenue trend</CardTitle>
             <CardDescription>Successful payments by month</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={210}>
               <AreaChart data={monthlyRevenue}>
                 <defs>
                   <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
@@ -232,13 +234,13 @@ export default function OverviewPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Content by platform</CardTitle>
+            <CardTitle>Content by platform</CardTitle>
             <CardDescription>All content types</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={210}>
               <PieChart>
-                <Pie data={platformCounts} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={2}>
+                <Pie data={platformCounts} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={2}>
                   {platformCounts.map((p) => (
                     <Cell key={p.name} fill={p.color} />
                   ))}
@@ -262,7 +264,7 @@ export default function OverviewPage() {
         {/* RSS status */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">RSS Sync Status</CardTitle>
+            <CardTitle>RSS Sync Status</CardTitle>
             <CardDescription>Automatic podcast ingestion</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -281,7 +283,6 @@ export default function OverviewPage() {
                     variant="outline"
                     onClick={() => {
                       syncRssFeed(f.id)
-                      toast.success(`Synced ${PLATFORM_MAP[f.platform].name}`)
                     }}
                   >
                     Sync
@@ -295,11 +296,11 @@ export default function OverviewPage() {
         {/* Top categories */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Top Categories</CardTitle>
+            <CardTitle>Top Categories</CardTitle>
             <CardDescription>By content volume</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={190}>
               <BarChart data={topCategories} layout="vertical">
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="name" width={120} fontSize={11} tickLine={false} axisLine={false} />
@@ -313,22 +314,27 @@ export default function OverviewPage() {
         {/* Activity */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Recent Activity</CardTitle>
-            <CardDescription>Live admin events</CardDescription>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Latest admin actions</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {data.activity.slice(0, 6).map((a, i) => (
-                <div key={i} className="flex gap-3">
-                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+              {data.auditLogs.slice(0, 6).map((a) => (
+                <div key={a.id} className="flex gap-3">
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-gold" />
                   <div className="min-w-0">
-                    <p className="truncate text-sm">{a.title}</p>
+                    <p className="truncate text-sm">
+                      {a.actor} · {a.action} {a.resource}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      {a.meta} · {new Date(a.ts).toLocaleTimeString()}
+                      {new Date(a.timestamp).toLocaleString()}
                     </p>
                   </div>
                 </div>
               ))}
+              {data.auditLogs.length === 0 && (
+                <p className="text-sm text-muted-foreground">No recent activity.</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -338,7 +344,7 @@ export default function OverviewPage() {
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Most Viewed Content</CardTitle>
+            <CardTitle>Most Viewed Content</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {topViewed.map((c: AnyContent, i) => (
@@ -348,7 +354,7 @@ export default function OverviewPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Most Shared Content</CardTitle>
+            <CardTitle>Most Shared Content</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {topShared.map((c: AnyContent, i) => (
@@ -361,7 +367,7 @@ export default function OverviewPage() {
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Traffic Sources</CardTitle>
+            <CardTitle>Traffic Sources</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {traffic.map((t) => (
@@ -379,7 +385,7 @@ export default function OverviewPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Search Analytics</CardTitle>
+            <CardTitle>Search Analytics</CardTitle>
             <CardDescription>Trending terms</CardDescription>
           </CardHeader>
           <CardContent className="space-y-1.5">
@@ -393,7 +399,7 @@ export default function OverviewPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Quick Actions</CardTitle>
+            <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
             <QuickLink href="/admin/books" icon={<BookOpen className="h-4 w-4" />} label="Books" />

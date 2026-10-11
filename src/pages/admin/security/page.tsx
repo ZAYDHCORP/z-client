@@ -30,7 +30,7 @@ export default function SecurityPage() {
     <div>
       <PageHeader
         title="Security"
-        description="Authentication policy, rate limiting, data protection and live system integrity monitoring."
+        description="Sign-in policy and system status."
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -103,7 +103,7 @@ export default function SecurityPage() {
       </div>
 
       <Card className="mt-4">
-        <CardHeader><CardTitle className="text-base">Recent Security Events</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Recent Security Events</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>

@@ -63,21 +63,26 @@ export default function AnalyticsPage() {
     [data],
   )
 
-  const growth = [
-    { m: "Apr", users: 40 },
-    { m: "May", users: 68 },
-    { m: "Jun", users: 95 },
-    { m: "Jul", users: 132 },
-    { m: "Aug", users: 178 },
-  ]
+  // Cumulative sign-ups per month, from real join dates (last 6 months).
+  const growth = useMemo(() => {
+    const now = new Date()
+    const months = Array.from({ length: 6 }).map((_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+      return { d, m: d.toLocaleDateString("en", { month: "short" }) }
+    })
+    return months.map(({ d, m }) => {
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime()
+      return { m, users: data.users.filter((u) => new Date(u.joinedAt).getTime() < end).length }
+    })
+  }, [data.users])
 
   const totalViews = all.reduce((s, c) => s + c.views, 0)
   const totalShares = all.reduce((s, c) => s + c.shares, 0)
 
   return (
     <div>
-      <PageHeader title="Analytics & Reporting" description="Platform-wide analytics: users, revenue, content performance, RSS health and discovery." />
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <PageHeader title="Analytics & Reporting" description="Users, revenue, content and discovery." />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Total Users" value={data.users.length} icon={<span>👥</span>} accent="#0ea5e9" />
         <StatCard label="Active Members" value={data.users.filter((u) => u.membership === "active" || u.membership === "lifetime").length} accent="#10b981" />
         <StatCard label="Total Views" value={totalViews.toLocaleString()} accent="#f59e0b" />
@@ -86,7 +91,7 @@ export default function AnalyticsPage() {
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="text-base">User Growth</CardTitle></CardHeader>
+          <CardHeader><CardTitle>User Growth</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={growth}>
@@ -105,7 +110,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Content Consumption by Type</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Content Consumption by Type</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={consumption}>
@@ -121,7 +126,7 @@ export default function AnalyticsPage() {
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="text-base">Platform Performance</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Platform Performance</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={platformPerf}>
@@ -136,7 +141,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Membership Distribution</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Membership Distribution</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
@@ -151,7 +156,7 @@ export default function AnalyticsPage() {
       </div>
 
       <Card className="mt-4">
-        <CardHeader><CardTitle className="text-base">RSS Health</CardTitle></CardHeader>
+        <CardHeader><CardTitle>RSS Health</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {data.rss.map((f) => (
             <div key={f.id} className="flex items-center justify-between rounded-lg border border-border p-2.5">

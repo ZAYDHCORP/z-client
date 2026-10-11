@@ -66,7 +66,7 @@ export default function SeoAeoPage() {
     <div>
       <PageHeader
         title="SEO / AEO"
-        description="Per-content search optimisation and answer-engine optimisation. Focus keywords, meta, Open Graph, robots and AI-friendly summaries."
+        description="Search and answer-engine details for each piece of content."
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
@@ -83,7 +83,7 @@ export default function SeoAeoPage() {
         </Select>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
+      <div className="gate-surface overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

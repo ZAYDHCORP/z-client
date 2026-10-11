@@ -84,7 +84,7 @@ export function AccountContent({ wide = false }: { wide?: boolean }) {
       const nextProfile = profile ? { ...profile, name, image } : { name, image };
       setProfile(nextProfile);
       cacheUser(nextProfile);
-      setSuccess("Saved on this device — the backend doesn't have a profile-update endpoint yet, so this doesn't sync to other devices.");
+      setSuccess("Changes saved on this device.");
     } catch {
       setError("Could not save changes.");
     } finally {
@@ -107,7 +107,7 @@ export function AccountContent({ wide = false }: { wide?: boolean }) {
     }
     setPwSaving(true);
     try {
-      setError("Password changes are not available until the backend exposes this endpoint.");
+      setError("Changing your password isn't available yet. Use “Forgot password” on the sign-in page.");
       setCurrentPassword("");
       setNewPassword("");
     } finally {
@@ -257,9 +257,6 @@ export function AccountContent({ wide = false }: { wide?: boolean }) {
             {saving && <Loader2 className="animate-spin" size={16} />}
             Save changes
           </button>
-          <p className="text-xs text-zinc-500">
-            Saved to this browser only — the backend doesn't have a profile-update endpoint yet.
-          </p>
         </form>
       </section>
 

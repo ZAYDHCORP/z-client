@@ -34,7 +34,7 @@ export default function ExportPage() {
     <div>
       <PageHeader
         title="Export"
-        description="Download the Theocentric & Doxology data loaded so far as JSON. Use Load more below to include further pages before exporting."
+        description="Download the loaded data as JSON."
         actions={
           <>
             <Button variant="outline" onClick={copy}>{copied ? "Copied!" : "Copy JSON"}</Button>
@@ -46,26 +46,26 @@ export default function ExportPage() {
       />
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl border border-border bg-card p-3 text-center">
+        <div className="gate-surface p-3 text-center">
           <p className="text-xl font-semibold">{data.content.length}</p>
           <p className="text-xs text-muted-foreground">Content</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-3 text-center">
+        <div className="gate-surface p-3 text-center">
           <p className="text-xl font-semibold">{data.categories.length}</p>
           <p className="text-xs text-muted-foreground">Categories</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-3 text-center">
+        <div className="gate-surface p-3 text-center">
           <p className="text-xl font-semibold">{data.collections.length}</p>
           <p className="text-xs text-muted-foreground">Collections</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-3 text-center">
+        <div className="gate-surface p-3 text-center">
           <p className="text-xl font-semibold">{data.references.length}</p>
           <p className="text-xs text-muted-foreground">References</p>
         </div>
       </div>
 
       {(["content", "categories", "collections", "references", "tags", "milestones", "subcategories"] as const).some((k) => hasMore(k)) && (
-        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm">
+        <div className="mb-4 flex flex-wrap items-center gap-2 gate-surface p-3 text-sm">
           <span className="text-muted-foreground">More records exist on the server:</span>
           {(["content", "categories", "collections", "references", "tags", "milestones", "subcategories"] as const)
             .filter((k) => hasMore(k))
@@ -77,7 +77,7 @@ export default function ExportPage() {
         </div>
       )}
 
-      <pre className="max-h-[60vh] overflow-auto rounded-xl border border-border bg-card p-4 text-xs">{json}</pre>
+      <pre className="max-h-[60vh] overflow-auto gate-surface p-4 text-xs">{json}</pre>
     </div>
   )
 }

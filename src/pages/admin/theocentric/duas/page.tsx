@@ -4,7 +4,7 @@ export default function DuasPage() {
   return (
     <SpiritualContentPage
       title="Duas"
-      description="Personal supplications and invocations. Arabic RTL with transliteration and translation."
+      description="Supplications with Arabic, transliteration and translation."
       kinds={["dua"]}
     />
   )

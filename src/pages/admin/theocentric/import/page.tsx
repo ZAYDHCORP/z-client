@@ -15,13 +15,12 @@ export default function ImportPage() {
         title="Import"
         description="Bulk JSON import of Theocentric & Doxology data."
       />
-      <div className="flex max-w-2xl gap-3 rounded-xl border border-border bg-card p-4 text-sm">
+      <div className="flex max-w-2xl gap-3 gate-surface p-4 text-sm">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <div className="space-y-2 text-muted-foreground">
           <p className="font-medium text-foreground">Bulk import isn&apos;t available yet</p>
           <p>
-            The backend doesn&apos;t expose an import endpoint. Create content, categories, collections and the rest
-            from their own pages — each of those is saved directly to the server.
+            Add content, categories, collections and the rest from their own pages — each one is saved as you go.
           </p>
         </div>
       </div>

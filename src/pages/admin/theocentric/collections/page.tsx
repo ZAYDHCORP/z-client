@@ -77,7 +77,7 @@ export default function CollectionsPage() {
     <div>
       <PageHeader
         title="Collections / Routines"
-        description="Group content into collections (routines) without duplicating records. The same item can belong to many collections."
+        description="Group content into routines. One item can belong to several collections."
         actions={
           <Button onClick={openNew}>
             <Plus className="mr-1.5 h-4 w-4" /> New Collection
@@ -87,7 +87,7 @@ export default function CollectionsPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data.collections.map((c) => (
-          <div key={c.id} className="rounded-xl border border-border bg-card p-4">
+          <div key={c.id} className="gate-surface p-4">
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-medium">{c.name}</p>

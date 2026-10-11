@@ -23,7 +23,7 @@ export default function CategoriesPage() {
       hasMore={hasMore("categories")}
       loadingMore={isResourceLoading("categories")}
       title="Categories"
-      description="Dynamic taxonomy. Create unlimited categories per platform with ordering and status."
+      description="Categories for each platform."
       rows={data.categories}
       searchKeys={["name", "slug"]}
       newRecord={(): Category => ({

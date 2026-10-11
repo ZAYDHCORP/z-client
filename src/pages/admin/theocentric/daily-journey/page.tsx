@@ -51,7 +51,7 @@ export default function DailyJourneyPage() {
     <div>
       <PageHeader
         title="Daily Journey"
-        description="Define the ordered sections of a user's daily spiritual journey. Each section maps to a collection of content."
+        description="The ordered sections of a user's daily journey, each linked to a collection."
         actions={
           <>
             <Button variant="outline" onClick={add}>
@@ -64,7 +64,7 @@ export default function DailyJourneyPage() {
 
       <div className="space-y-3">
         {sections.map((s, idx) => (
-          <div key={idx} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-end">
+          <div key={idx} className="flex flex-col gap-3 gate-surface p-4 sm:flex-row sm:items-end">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">{idx + 1}</span>
             </div>

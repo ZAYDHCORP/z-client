@@ -26,7 +26,7 @@ export default function SocialLinksPage() {
       hasMore={hasMore("socialLinks")}
       loadingMore={isResourceLoading("socialLinks")}
       title="Social & External Links"
-      description="Manage website, YouTube, Spotify, podcasts, social and WhatsApp links per platform without code changes."
+      description="Website and social links for each platform."
       rows={data.socialLinks}
       searchKeys={["label", "url", "type"]}
       newRecord={(): SocialLink => ({

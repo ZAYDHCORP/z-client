@@ -6,7 +6,7 @@ export default function InfographicsPage() {
     <div>
       <PageHeader
         title="Infographics"
-        description="Instagram / Pinterest style publishing with fixed 4:5 uploads, captions, categories and feed placement."
+        description="Create and publish infographics."
       />
       <ContentTable type="infographic" />
     </div>

@@ -92,11 +92,11 @@ export default function PaymentsPage() {
     <div>
       <PageHeader
         title="Payments"
-        description="Transactions, successful payments, failures, refunds, renewals and revenue reporting."
+        description="Transactions, refunds and revenue."
         actions={<Button variant="outline" onClick={exportCsv}><Download className="mr-1.5 h-4 w-4" /> Export</Button>}
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Total Revenue" value={stats ? "₹" + stats.totalRevenue.toLocaleString("en-IN") : "—"} icon={<IndianRupee className="h-4 w-4" />} accent="#10b981" />
         <StatCard label="Successful" value={stats?.successful ?? "—"} delta="verified" accent="#0ea5e9" />
         <StatCard label="Pending" value={stats?.pending ?? "—"} accent="#f59e0b" />
@@ -116,7 +116,7 @@ export default function PaymentsPage() {
         </Select>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
+      <div className="gate-surface overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -165,10 +165,6 @@ export default function PaymentsPage() {
           </Button>
         </div>
       )}
-
-      <p className="mt-3 text-xs text-muted-foreground">
-        Successful payment automatically activates the correct membership and unlocks premium access. Failed payments never grant access.
-      </p>
     </div>
   )
 }

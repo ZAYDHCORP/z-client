@@ -4,7 +4,7 @@ export default function AdhkarsPage() {
   return (
     <SpiritualContentPage
       title="Adhkars"
-      description="Remembrances and dhikr. Assign to routines (morning, evening, after salah, before sleep)."
+      description="Remembrances, grouped into routines."
       kinds={["adkar"]}
     />
   )

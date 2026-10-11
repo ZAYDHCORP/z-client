@@ -4,7 +4,7 @@ export default function VerificationPage() {
   return (
     <SpiritualContentPage
       title="Verification"
-      description="Review pipeline: unverified → under review → verified → requires correction. Filter by status above."
+      description="Review content before it can be published."
       kinds={["dua", "adkar", "quranic", "rabbana", "ruqiyah"]}
       showKind
       hideAdd

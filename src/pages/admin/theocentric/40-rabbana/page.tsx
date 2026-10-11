@@ -4,7 +4,7 @@ export default function RabbanaPage() {
   return (
     <SpiritualContentPage
       title="40 Rabbana"
-      description="The 40 Rabbana supplications from the Qur'an, ordered by Rabbana number."
+      description="The 40 Rabbana supplications from the Qur'an."
       kinds={["rabbana"]}
     />
   )

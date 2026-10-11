@@ -141,18 +141,18 @@ export function SpiritualContentPage({
         }
       />
 
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-[240px] flex-1">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search text, tags…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="pl-9"
+            className="pl-10"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="draft">Draft</SelectItem>
@@ -162,7 +162,7 @@ export function SpiritualContentPage({
           </SelectContent>
         </Select>
         <Select value={verifyFilter} onValueChange={setVerifyFilter}>
-          <SelectTrigger><SelectValue placeholder="Verification" /></SelectTrigger>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Verification" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All verification</SelectItem>
             <SelectItem value="unverified">Unverified</SelectItem>
@@ -172,7 +172,7 @@ export function SpiritualContentPage({
           </SelectContent>
         </Select>
         <Select value={catFilter} onValueChange={setCatFilter}>
-          <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Category" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All categories</SelectItem>
             {data.categories.map((c) => (
@@ -203,7 +203,7 @@ export function SpiritualContentPage({
         </div>
       )}
 
-      <div className="rounded-xl border border-border bg-card">
+      <div className="gate-surface overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -227,7 +227,7 @@ export function SpiritualContentPage({
                     onChange={() => toggleSelect(c.id)}
                   />
                 </TableCell>
-                <TableCell>
+                <TableCell className="max-w-[22rem]">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => toggleFeatured(c.id)}
@@ -249,7 +249,7 @@ export function SpiritualContentPage({
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-sm">{catName(c.category)}</TableCell>
+                <TableCell className="min-w-28 text-sm">{catName(c.category)}</TableCell>
                 {showKind && (
                   <TableCell>
                     <span className="rounded-full bg-muted px-2 py-0.5 text-xs">{KIND_LABEL[c.kind]}</span>
@@ -298,7 +298,7 @@ export function SpiritualContentPage({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-rose-600"
+                      className="h-8 w-8 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600"
                       onClick={() => { if (confirm("Delete this item?")) removeContent(c.id) }}
                       title="Delete"
                     >

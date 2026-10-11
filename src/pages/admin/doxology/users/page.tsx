@@ -20,7 +20,7 @@ export default function DoxologyUsersPage() {
     <div>
       <PageHeader
         title="Users"
-        description="View each user's Doxology status, 4 compulsory categories, and manage their alarms."
+        description="Each user's Doxology status and alarms."
       />
       <div className="relative mb-4 max-w-xs">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

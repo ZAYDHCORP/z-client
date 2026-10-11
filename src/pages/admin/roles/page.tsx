@@ -46,7 +46,7 @@ export default function RolesPage() {
     <div>
       <PageHeader
         title="Roles & Permissions"
-        description="Role-based access control across the • Gate admin. Assign roles from the Users page; capabilities are enforced here."
+        description="Roles and what each one can do."
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
@@ -65,7 +65,7 @@ export default function RolesPage() {
       </div>
 
       <Card className="mt-4">
-        <CardHeader><CardTitle className="text-base">Capability Matrix</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Capability Matrix</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -95,7 +95,7 @@ export default function RolesPage() {
       </Card>
 
       <Card className="mt-4">
-        <CardHeader><CardTitle className="text-base">Active Admins</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Active Admins</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {data.users
             .filter((u) => u.role !== "user")

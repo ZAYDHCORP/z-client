@@ -117,12 +117,17 @@ export function CrudTable<T extends { id: string }>({
           </Button>
         }
       />
-      <div className="relative mb-4 max-w-xs">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder={`Search ${title.toLowerCase()}…`} value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input placeholder={`Search ${title.toLowerCase()}…`} value={q} onChange={(e) => setQ(e.target.value)} className="pl-10" />
+        </div>
+        <span className="rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground tabular-nums">
+          {filtered.length} {filtered.length === 1 ? "record" : "records"}
+        </span>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
+      <div className="gate-surface overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -140,10 +145,10 @@ export function CrudTable<T extends { id: string }>({
                 ))}
                 <TableCell>
                   <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(row)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => openEdit(row)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-600" onClick={() => { if (confirm("Delete this item?")) onDelete(row.id) }}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600" onClick={() => { if (confirm("Delete this item?")) onDelete(row.id) }}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -152,7 +157,7 @@ export function CrudTable<T extends { id: string }>({
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={columns.length + 1} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={columns.length + 1} className="py-16 text-center text-muted-foreground">
                   No records found.
                 </TableCell>
               </TableRow>
@@ -372,7 +377,7 @@ function FileField({
 
   return (
     <div className="space-y-2">
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background px-4 py-6 text-sm text-muted-foreground transition-colors hover:bg-accent/40">
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 px-4 py-8 text-sm text-muted-foreground transition-colors hover:border-gold/60 hover:bg-gold-soft">
         {hasFile && isImage ? (
           <img src={value} alt="" className="max-h-40 rounded-md object-contain" />
         ) : hasFile ? (

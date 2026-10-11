@@ -11,7 +11,7 @@ export default function TheoReferencesPage() {
       hasMore={hasMore("references")}
       loadingMore={isLoading("references")}
       title="References"
-      description="Authoritative Qur'an and Hadith sources used to verify content."
+      description="Qur'an and Hadith sources used to verify content."
       rows={data.references}
       columns={[
         {

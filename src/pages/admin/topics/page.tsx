@@ -16,7 +16,7 @@ export default function TopicsPage() {
       hasMore={hasMore("topics")}
       loadingMore={isResourceLoading("topics")}
       title="Topics"
-      description="Topical metadata used for discovery and recommendations."
+      description="Topics used to find related content."
       rows={data.topics}
       searchKeys={["name", "slug"]}
       newRecord={() => ({ id: `topic_${Date.now().toString(36)}`, name: "", slug: "", usage: 0 })}

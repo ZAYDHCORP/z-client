@@ -13,7 +13,7 @@ export default function TheoMilestonesPage() {
       hasMore={hasMore("milestones")}
       loadingMore={isLoading("milestones")}
       title="Milestones"
-      description="Achievements unlocked when a user reaches a threshold (e.g. the first 7 duas completed)."
+      description="Achievements unlocked at a set threshold."
       rows={data.milestones}
       columns={[
         {

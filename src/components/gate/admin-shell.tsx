@@ -76,6 +76,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getCachedUser, logoutCurrentUser } from "@/lib/client-auth"
+import { SHOW_UNCONNECTED, isUnconnectedPath } from "@/lib/features"
+import { EmptyState } from "@/components/gate/ui"
 
 interface NavItem {
   label: string
@@ -229,9 +231,14 @@ function SidebarContent({ pathname, onNav }: { pathname: string; onNav?: () => v
         </span>
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {NAV.map((group) => (
-          <div key={group.label} className="mb-5">
-            <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {NAV.map((group) => ({
+          ...group,
+          items: group.items.filter((i) => SHOW_UNCONNECTED || !isUnconnectedPath(i.href)),
+        }))
+          .filter((group) => group.items.length > 0)
+          .map((group) => (
+          <div key={group.label} className="mb-6">
+            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">
               {group.label}
             </p>
             <div className="space-y-0.5">
@@ -246,10 +253,10 @@ function SidebarContent({ pathname, onNav }: { pathname: string; onNav?: () => v
                     to={item.href}
                     onClick={onNav}
                     className={cn(
-                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                      "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
                       active
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-accent/70 hover:text-foreground",
                     )}
                   >
                     <item.icon
@@ -340,7 +347,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur lg:px-6">
+        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border/70 bg-background/75 px-4 backdrop-blur-xl lg:px-8">
           <Button
             variant="ghost"
             size="icon"
@@ -387,17 +394,19 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
 
           <ThemeToggle />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <Activity className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuLabel>System Health</DropdownMenuLabel>
-              <SystemHealthMini />
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {SHOW_UNCONNECTED && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Activity className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>System Health</DropdownMenuLabel>
+                <SystemHealthMini />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -413,16 +422,20 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
                   <User className="mr-2 h-4 w-4" /> Profile
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/admin/settings">
-                  <Settings className="mr-2 h-4 w-4" /> Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/admin/security">
-                  <Lock className="mr-2 h-4 w-4" /> Security
-                </Link>
-              </DropdownMenuItem>
+              {SHOW_UNCONNECTED && (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/settings">
+                      <Settings className="mr-2 h-4 w-4" /> Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/security">
+                      <Lock className="mr-2 h-4 w-4" /> Security
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuItem asChild>
                 <Link to="/admin/audit-logs">
                   <Activity className="mr-2 h-4 w-4" /> Audit Logs
@@ -441,7 +454,15 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
           </DropdownMenu>
         </header>
 
-        <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-8">{children}</main>
+        <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-10 lg:py-9">
+          <div className="mx-auto w-full max-w-[1360px]">
+            {!SHOW_UNCONNECTED && isUnconnectedPath(pathname) ? (
+              <EmptyState title="Not available yet" description="This section isn't enabled for your workspace." />
+            ) : (
+              children
+            )}
+          </div>
+        </main>
       </div>
     </div>
   )

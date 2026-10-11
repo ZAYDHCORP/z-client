@@ -11,7 +11,7 @@ export default function TheoSubcategoriesPage() {
       hasMore={hasMore("subcategories")}
       loadingMore={isLoading("subcategories")}
       title="Subcategories"
-      description="Nest finer groupings under a parent category."
+      description="Finer groupings under a category."
       rows={data.subcategories}
       columns={[
         { header: "Name", cell: (s) => <span className="font-medium">{s.name}</span> },

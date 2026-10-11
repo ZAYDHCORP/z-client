@@ -4,7 +4,7 @@ export default function DraftsPage() {
   return (
     <SpiritualContentPage
       title="Drafts"
-      description="All unpublished draft content across every kind."
+      description="Content that isn't published yet."
       kinds={["dua", "adkar", "quranic", "rabbana", "ruqiyah"]}
       filters={{ status: "draft" }}
       predicate={(c) => c.status === "draft"}

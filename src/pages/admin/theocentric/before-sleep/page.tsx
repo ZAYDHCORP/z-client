@@ -4,7 +4,7 @@ export default function BeforeSleepPage() {
   return (
     <SpiritualContentPage
       title="Before Sleep"
-      description="Adhkars and supplications assigned to the Before Sleep routine."
+      description="Adhkars for before sleep."
       kinds={["adkar"]}
       filters={{ routine: "before_sleep" }}
       predicate={(c) => c.routines.includes("before_sleep")}

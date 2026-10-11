@@ -151,7 +151,7 @@ export function UserTable({ users }: { users: DoxologyUser[] }) {
 
   return (
     <div>
-      <div className="rounded-xl border border-border bg-card">
+      <div className="gate-surface overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

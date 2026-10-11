@@ -22,7 +22,7 @@ export default function TagsPage() {
       hasMore={hasMore("tags")}
       loadingMore={isResourceLoading("tags")}
       title="Tags"
-      description="Reusable tags attached to content across platforms."
+      description="Tags used to group content."
       rows={data.tags}
       searchKeys={["name", "slug"]}
       newRecord={(): Tag => ({ id: `tag_${Date.now().toString(36)}`, name: "", slug: "", usage: 0, platform: "ALL" })}

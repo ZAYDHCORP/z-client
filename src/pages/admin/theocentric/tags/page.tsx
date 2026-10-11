@@ -11,7 +11,7 @@ export default function TheoTagsPage() {
       hasMore={hasMore("tags")}
       loadingMore={isLoading("tags")}
       title="Tags"
-      description="Thematic tags applied across content for discovery."
+      description="Tags used to group content."
       rows={data.tags}
       columns={[
         { header: "Name", cell: (t) => <span className="font-medium">{t.name}</span> },

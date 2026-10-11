@@ -9,7 +9,7 @@ export default function BadgesStreaksPage() {
   return (
     <CrudTable
       title="Badges & Streaks"
-      description="Gamification rules that award badges and streaks for learning, reading, podcasts and category milestones."
+      description="Rules that award badges and streaks."
       columns={[
         { header: "Name", cell: (r) => <span className="font-medium">{r.name}</span> },
         { header: "Type", cell: (r) => r.type.replace(/_/g, " ") },

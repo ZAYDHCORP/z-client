@@ -312,7 +312,7 @@ export function SpiritualEditor({
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Eye className="h-4 w-4" /> Live Preview
               </div>
-              <div className="rounded-xl border border-border bg-card p-4">
+              <div className="gate-surface p-4">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">{kindLabel[kind]}</p>
                 <h3 className="mt-1 text-lg font-semibold">{form.title || "Untitled"}</h3>
                 {form.arabic && (

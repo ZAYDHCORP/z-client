@@ -105,7 +105,7 @@ export default function PlatformPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <StatCard label="Total Content" value={stats.content} icon={<FileText className="h-4 w-4" />} accent={meta.color} />
         <StatCard label="Published" value={stats.published} icon={<BookOpen className="h-4 w-4" />} accent={meta.color} />
         <StatCard label="Categories" value={stats.categories} icon={<Folder className="h-4 w-4" />} accent={meta.color} />
@@ -116,7 +116,7 @@ export default function PlatformPage() {
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card>
-          <CardHeader><CardTitle className="text-base">Categories</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Categories</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {categories.map((c) => (
               <div key={c.id} className="flex items-center justify-between rounded-lg border border-border p-2.5">
@@ -129,7 +129,7 @@ export default function PlatformPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base">Services</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Services</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {services.map((s) => (
               <div key={s.id} className="rounded-lg border border-border p-2.5">
@@ -142,7 +142,7 @@ export default function PlatformPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base">Social & Distribution</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Social & Distribution</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {links.map((l) => (
               <div key={l.id} className="flex items-center justify-between rounded-lg border border-border p-2.5">
@@ -161,7 +161,7 @@ export default function PlatformPage() {
       </div>
 
       <Card className="mt-4">
-        <CardHeader><CardTitle className="text-base">Content</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Content</CardTitle></CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>

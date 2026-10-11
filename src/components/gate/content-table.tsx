@@ -77,11 +77,13 @@ export function ContentTable({ type }: { type: ContentType }) {
     hasMore,
     isResourceLoading,
     ensureCategoriesLoaded,
+    ensureContentLoaded,
   } = useGate()
 
   useEffect(() => {
     ensureCategoriesLoaded()
-  }, [ensureCategoriesLoaded])
+    ensureContentLoaded()
+  }, [ensureCategoriesLoaded, ensureContentLoaded])
 
   const [query, setQuery] = useState("")
   const [platform, setPlatform] = useState<string>("all")
@@ -173,12 +175,12 @@ export function ContentTable({ type }: { type: ContentType }) {
         </Button>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
+      <div className="gate-surface overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">#</TableHead>
-              <TableHead>Content</TableHead>
+              <TableHead className="w-full">Content</TableHead>
               <TableHead className="hidden md:table-cell">Platform</TableHead>
               <TableHead className="hidden lg:table-cell">Category</TableHead>
               <TableHead>Status</TableHead>
@@ -194,7 +196,7 @@ export function ContentTable({ type }: { type: ContentType }) {
                     {String(i + 1).padStart(2, "0")}
                   </span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="w-full max-w-0">
                   <div className="flex items-center gap-3">
                     <Thumb item={item} />
                     <div className="min-w-0">
@@ -209,7 +211,7 @@ export function ContentTable({ type }: { type: ContentType }) {
                 <TableCell className="hidden md:table-cell">
                   <PlatformPill p={item.platform} />
                 </TableCell>
-                <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                <TableCell className="hidden whitespace-nowrap lg:table-cell text-sm text-muted-foreground">
                   {item.category}
                 </TableCell>
                 <TableCell>

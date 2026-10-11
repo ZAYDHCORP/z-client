@@ -55,11 +55,11 @@ export default function NotificationsPage() {
     <div>
       <PageHeader
         title="Notifications"
-        description="New books, podcasts, reports, renewals, workshops, certificates and personalised recommendations."
+        description="Messages sent to members."
         actions={<Button onClick={openNew}><Plus className="mr-1.5 h-4 w-4" /> Compose</Button>}
       />
 
-      <div className="rounded-xl border border-border bg-card">
+      <div className="gate-surface">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-muted-foreground">

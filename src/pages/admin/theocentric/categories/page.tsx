@@ -19,7 +19,7 @@ export default function TheoCategoriesPage() {
       hasMore={hasMore("categories")}
       loadingMore={isLoading("categories")}
       title="Categories"
-      description="Top-level spiritual categories. Add new ones anytime — the CMS is dynamic."
+      description="Top-level categories."
       rows={data.categories}
       columns={[
         {

@@ -4,7 +4,7 @@ export default function RuqiyahPage() {
   return (
     <SpiritualContentPage
       title="Ruqiyah"
-      description="Qur'anic and authentic supplications for healing and protection (Ruqyah)."
+      description="Supplications for healing and protection."
       kinds={["ruqiyah"]}
     />
   )

@@ -6,7 +6,7 @@ export default function ResearchPage() {
     <div>
       <PageHeader
         title="Research Reports"
-        description="Publish research reports with 16:25 covers, PDF, metadata and Google Play Books links."
+        description="Publish research reports with covers, files and links."
       />
       <ContentTable type="research" />
     </div>

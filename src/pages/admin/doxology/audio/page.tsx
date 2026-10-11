@@ -68,7 +68,7 @@ export default function AudioLibraryPage() {
     <div>
       <PageHeader
         title="Audio Library"
-        description="Upload or update approved alarm/reminder audio. All audio must be from authentic, approved sources."
+        description="Upload approved alarm audio."
         actions={
           <Button onClick={openNew}>
             <Plus className="mr-1.5 h-4 w-4" /> Add Audio
@@ -78,7 +78,7 @@ export default function AudioLibraryPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data.audio.map((a) => (
-          <div key={a.id} className="rounded-xl border border-border bg-card p-4">
+          <div key={a.id} className="gate-surface p-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <Music className="h-4 w-4 text-primary" />

@@ -6,7 +6,7 @@ export default function PodcastsPage() {
     <div>
       <PageHeader
         title="Podcasts"
-        description="RSS-synced episodes with actual audio URLs, artwork, metadata and publishing controls."
+        description="Podcast episodes imported from RSS."
       />
       <ContentTable type="podcast" />
     </div>

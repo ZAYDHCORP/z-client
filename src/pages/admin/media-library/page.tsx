@@ -43,7 +43,7 @@ export default function MediaLibraryPage() {
         hasMore={hasMore("mediaAssets")}
         loadingMore={isResourceLoading("mediaAssets")}
         title="Media Library"
-        description="Central media with folders, search, alt text, optimisation and duplicate detection."
+        description="Your uploaded images, PDFs and audio."
         rows={rows}
         searchKeys={["name", "altText", "folder"]}
         newRecord={(): MediaAsset => ({

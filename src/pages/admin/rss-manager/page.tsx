@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
-import { Pencil, Plus, RefreshCw, Rss, Trash2, CheckCircle2 } from "lucide-react"
+import { Pencil, Plus, RefreshCw, Rss, Trash2 } from "lucide-react"
 import { PageHeader, StatusBadge } from "@/components/gate/ui"
 import { useGate } from "@/lib/gate/store"
 import { PLATFORMS, PLATFORM_MAP } from "@/lib/gate/platforms"
@@ -69,14 +69,13 @@ export default function RssManagerPage() {
     <div>
       <PageHeader
         title="RSS Manager"
-        description="Automatic RSS fetching & synchronisation. Store actual enclosure audio URLs, edit metadata and control publishing per platform."
+        description="Fetch podcast episodes from RSS feeds and manage them."
+        actions={
+          <Button onClick={() => setFeedOpen(true)}>
+            <Plus className="mr-1.5 h-4 w-4" /> Add Feed
+          </Button>
+        }
       />
-
-      <div className="mb-3 flex justify-end">
-        <Button size="sm" onClick={() => setFeedOpen(true)}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" /> Add Feed
-        </Button>
-      </div>
 
       {/* Feed cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -125,7 +124,7 @@ export default function RssManagerPage() {
       )}
 
       {/* Episodes */}
-      <div className="mb-4 mt-6 flex items-center gap-3">
+      <div className="mb-4 mt-8 flex items-center gap-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Episodes</h2>
         <Select value={platform} onValueChange={setPlatform}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
@@ -136,7 +135,7 @@ export default function RssManagerPage() {
         </Select>
       </div>
 
-      <div className="rounded-xl border border-border bg-card">
+      <div className="gate-surface overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -150,7 +149,7 @@ export default function RssManagerPage() {
           <TableBody>
             {episodes.map((ep) => (
               <TableRow key={ep.id}>
-                <TableCell>
+                <TableCell className="w-full max-w-0">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-muted">
                       {(ep as PodcastEpisode).artwork ? (
@@ -164,7 +163,7 @@ export default function RssManagerPage() {
                   </div>
                 </TableCell>
                 <TableCell><PlatformPill p={ep.platform} /></TableCell>
-                <TableCell className="text-sm text-muted-foreground">{ep.category}</TableCell>
+                <TableCell className="whitespace-nowrap text-sm text-muted-foreground">{ep.category}</TableCell>
                 <TableCell><StatusBadge status={ep.status} /></TableCell>
                 <TableCell>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(ep as PodcastEpisode); setOpen(true) }}>
@@ -173,6 +172,13 @@ export default function RssManagerPage() {
                 </TableCell>
               </TableRow>
             ))}
+            {episodes.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="py-14 text-center text-muted-foreground">
+                  No episodes yet — add a feed and press Sync Now to import them.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
@@ -308,9 +314,6 @@ function EpisodeEditor({ episode, onClose }: { episode: PodcastEpisode; onClose:
           <Button onClick={() => { updateContent(form.id, form); toast.success("Episode saved"); onClose() }}>Save</Button>
         </div>
       </div>
-      <p className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-        <CheckCircle2 className="h-3.5 w-3.5" /> Stored enclosure audio URL is used directly by the player — never a placeholder.
-      </p>
     </div>
   )
 }

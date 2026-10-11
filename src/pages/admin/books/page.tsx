@@ -6,7 +6,7 @@ export default function BooksPage() {
     <div>
       <PageHeader
         title="Books"
-        description="Publish books with 16:25 covers, PDF, metadata, purchase & affiliate links and Free Sample reader."
+        description="Publish books with covers, files and links."
       />
       <ContentTable type="book" />
     </div>

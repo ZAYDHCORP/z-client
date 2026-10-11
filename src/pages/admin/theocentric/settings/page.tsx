@@ -51,14 +51,14 @@ export default function TheoSettingsPage() {
     <div>
       <PageHeader
         title="Settings"
-        description="Configure verification, publication and display rules for the Theocentric & Doxology module."
+        description="Verification, publication and display rules."
         actions={
           <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save Settings"}</Button>
         }
       />
 
       <div className="max-w-3xl space-y-5">
-        <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between gate-surface p-4">
           <div>
             <p className="text-sm font-medium">Verification Required Before Publish</p>
             <p className="text-xs text-muted-foreground">Block publishing content that is not verified.</p>
@@ -81,7 +81,7 @@ export default function TheoSettingsPage() {
 
         <div className="space-y-1.5">
           <Label>Default Categories</Label>
-          <div className="flex flex-wrap gap-2 rounded-xl border border-border bg-card p-3">
+          <div className="flex flex-wrap gap-2 gate-surface p-3">
             {data.categories.map((c) => (
               <label key={c.id} className="flex items-center gap-1.5 text-sm">
                 <input type="checkbox" checked={defaultCategories.includes(c.id)} onChange={() => toggleCat(c.id)} />
