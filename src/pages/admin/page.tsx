@@ -40,6 +40,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import { sentenceCase } from "@/lib/text"
 
 const inr = (n: number) =>
   "₹" + n.toLocaleString("en-IN")
@@ -199,7 +200,7 @@ export default function OverviewPage() {
             <span className="flex items-center gap-2 text-base">
               {data.rss.filter((r) => r.status === "healthy").length}/
               {data.rss.length}
-              <StatusBadge status="healthy" label="healthy" />
+              <StatusBadge status="healthy" label="Healthy" />
             </span>
           }
           icon={<Rss className="h-4 w-4" />}
@@ -324,7 +325,7 @@ export default function OverviewPage() {
                   <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-gold" />
                   <div className="min-w-0">
                     <p className="truncate text-sm">
-                      {a.actor} · {a.action} {a.resource}
+                      {a.actor} · {sentenceCase(a.action)} {sentenceCase(a.resource).toLowerCase()}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(a.timestamp).toLocaleString()}

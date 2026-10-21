@@ -34,13 +34,13 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 
 export default function RssManagerPage() {
-  const { data, syncRssFeed, addRssFeed, updateRssFeed, removeRssFeed, ensureContentLoaded, ensureCategoriesLoaded, ensureRssLoaded, loadMore, hasMore, isResourceLoading } = useGate()
+  const { data, syncRssFeed, addRssFeed, updateRssFeed, removeRssFeed, ensureContentTypeLoaded, ensureCategoriesLoaded, ensureRssLoaded, loadMore, hasMore, isResourceLoading } = useGate()
 
   useEffect(() => {
-    ensureContentLoaded()
+    ensureContentTypeLoaded("podcast")
     ensureCategoriesLoaded()
     ensureRssLoaded()
-  }, [ensureContentLoaded, ensureCategoriesLoaded, ensureRssLoaded])
+  }, [ensureContentTypeLoaded, ensureCategoriesLoaded, ensureRssLoaded])
 
   const [platform, setPlatform] = useState("all")
   const [editing, setEditing] = useState<PodcastEpisode | null>(null)

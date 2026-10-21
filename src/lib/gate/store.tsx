@@ -266,6 +266,10 @@ function normalizeAuditLog(raw: Record<string, unknown>): AuditLog {
 
 export type ResourceKey =
   | "content"
+  | "books"
+  | "research"
+  | "infographics"
+  | "podcasts"
   | "users"
   | "categories"
   | "tags"
@@ -282,6 +286,10 @@ export type ResourceKey =
 
 const RESOURCE_KEYS: ResourceKey[] = [
   "content",
+  "books",
+  "research",
+  "infographics",
+  "podcasts",
   "users",
   "categories",
   "tags",
@@ -299,6 +307,10 @@ const RESOURCE_KEYS: ResourceKey[] = [
 
 const RESOURCE_LABEL: Record<ResourceKey, string> = {
   content: "content",
+  books: "books",
+  research: "research reports",
+  infographics: "infographics",
+  podcasts: "podcasts",
   users: "users",
   categories: "categories",
   tags: "tags",
@@ -312,6 +324,27 @@ const RESOURCE_LABEL: Record<ResourceKey, string> = {
   membershipPlans: "membership plans",
   payments: "payments",
   paymentStats: "payment stats",
+}
+
+/** Server `type` filter value for each per-type resource. */
+const TYPE_OF_KEY = {
+  books: "book",
+  research: "research",
+  infographics: "infographic",
+  podcasts: "podcast",
+} as const
+
+export const RESOURCE_KEY_OF_TYPE = {
+  book: "books",
+  research: "research",
+  infographic: "infographics",
+  podcast: "podcasts",
+} as const
+
+/** Keeps what is already loaded and adds only items not seen yet. */
+function mergeById<T extends { id: string }>(existing: T[], incoming: T[]): T[] {
+  const seen = new Set(existing.map((x) => x.id))
+  return [...existing, ...incoming.filter((x) => !seen.has(x.id))]
 }
 
 interface ResourcePage {
@@ -328,23 +361,34 @@ interface ResourcePage {
 async function fetchResourcePage(key: ResourceKey, page: number): Promise<ResourcePage> {
   switch (key) {
     case "content": {
+      // Mixed list (every type) — used by pages that look across all content.
+      // Merged by id so it never overwrites a per-type list that is already loaded.
       const { items: raw, hasMore } = await adminApi.content.list<Record<string, unknown>>(page)
       const normalized = raw.map(normalizeContent)
-      const byType = {
-        books: normalized.filter((c) => c.type === "book"),
-        research: normalized.filter((c) => c.type === "research"),
-        infographics: normalized.filter((c) => c.type === "infographic"),
-        podcasts: normalized.filter((c) => c.type === "podcast"),
-      }
       return {
         hasMore,
-        apply: (d, append) => ({
+        apply: (d) => ({
           ...d,
-          books: append ? [...d.books, ...byType.books] : byType.books,
-          research: append ? [...d.research, ...byType.research] : byType.research,
-          infographics: append ? [...d.infographics, ...byType.infographics] : byType.infographics,
-          podcasts: append ? [...d.podcasts, ...byType.podcasts] : byType.podcasts,
+          books: mergeById(d.books, normalized.filter((c) => c.type === "book")),
+          research: mergeById(d.research, normalized.filter((c) => c.type === "research")),
+          infographics: mergeById(d.infographics, normalized.filter((c) => c.type === "infographic")),
+          podcasts: mergeById(d.podcasts, normalized.filter((c) => c.type === "podcast")),
         }),
+      }
+    }
+    case "books":
+    case "research":
+    case "infographics":
+    case "podcasts": {
+      // One type only — the server filters (`?type=`), so a Books tab never pulls podcasts.
+      const { items: raw, hasMore } = await adminApi.content.list<Record<string, unknown>>(page, {
+        type: TYPE_OF_KEY[key],
+      })
+      const items = raw.map(normalizeContent)
+      return {
+        hasMore,
+        apply: (d, append) =>
+          ({ ...d, [key]: append ? mergeById(d[key] as AnyContent[], items) : items }) as GateData,
       }
     }
     case "users": {
@@ -413,6 +457,8 @@ interface StoreContextValue {
   // lazy per-resource loading — call the relevant one from the admin page
   // that actually needs that data, instead of fetching everything up front
   ensureContentLoaded: () => void
+  /** Loads just one content type (e.g. only books) from the server. */
+  ensureContentTypeLoaded: (type: AnyContent["type"]) => void
   ensureUsersLoaded: () => void
   ensureCategoriesLoaded: () => void
   ensureTagsLoaded: () => void
@@ -583,6 +629,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // them in a useEffect dependency array without re-triggering the fetch
   // on every unrelated store re-render.
   const ensureContentLoaded = useCallback(() => ensureLoaded("content"), [ensureLoaded])
+  const ensureContentTypeLoaded = useCallback(
+    (type: AnyContent["type"]) => ensureLoaded(RESOURCE_KEY_OF_TYPE[type]),
+    [ensureLoaded],
+  )
   const ensureUsersLoaded = useCallback(() => ensureLoaded("users"), [ensureLoaded])
   const ensureCategoriesLoaded = useCallback(() => ensureLoaded("categories"), [ensureLoaded])
   const ensureTagsLoaded = useCallback(() => ensureLoaded("tags"), [ensureLoaded])
@@ -638,6 +688,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       loading: Object.values(loadingKeys).some(Boolean),
       resetData,
       ensureContentLoaded,
+      ensureContentTypeLoaded,
       ensureUsersLoaded,
       ensureCategoriesLoaded,
       ensureTagsLoaded,
@@ -1193,6 +1244,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     loadingKeys,
     resetData,
     ensureContentLoaded,
+    ensureContentTypeLoaded,
     ensureUsersLoaded,
     ensureCategoriesLoaded,
     ensureTagsLoaded,

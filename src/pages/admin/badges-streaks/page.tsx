@@ -2,6 +2,7 @@ import { CrudTable } from "@/components/gate/crud-table"
 import { PageHeader } from "@/components/gate/ui"
 import { useGate } from "@/lib/gate/store"
 import type { BadgeRule } from "@/lib/gate/types"
+import { sentenceCase } from "@/lib/text"
 
 export default function BadgesStreaksPage() {
   const { data, addBadge, updateBadge, removeBadge } = useGate()
@@ -12,7 +13,7 @@ export default function BadgesStreaksPage() {
       description="Rules that award badges and streaks."
       columns={[
         { header: "Name", cell: (r) => <span className="font-medium">{r.name}</span> },
-        { header: "Type", cell: (r) => r.type.replace(/_/g, " ") },
+        { header: "Type", cell: (r) => sentenceCase(r.type) },
         { header: "Threshold", cell: (r) => r.threshold },
         { header: "Active", cell: (r) => (r.active ? "Yes" : "No") },
       ]}

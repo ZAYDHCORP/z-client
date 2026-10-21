@@ -62,6 +62,9 @@ export const API = {
     // Memberships — plans are editable; payments are read-only reporting.
     // (Checkout and webhook endpoints are intentionally NOT defined here —
     // payment flows must never be reachable from the admin browser.)
+    // Signed file uploads (file goes straight to storage; we only keep the short publicUrl).
+    UPLOADS_PRESIGN: `${BASE}/admin/uploads/presign`,
+
     MEMBERSHIP_PLANS: `${BASE}/admin/memberships/plans`,
     MEMBERSHIP_PLAN_BY_ID: (id: string) =>
       `${BASE}/admin/memberships/plans/${id}`,

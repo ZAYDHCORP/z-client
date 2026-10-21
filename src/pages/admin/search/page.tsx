@@ -6,6 +6,7 @@ import { PLATFORM_MAP } from "@/lib/gate/platforms"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { sentenceCase } from "@/lib/text"
 
 export default function SearchAdminPage() {
   const { data, ensureContentLoaded } = useGate()
@@ -64,7 +65,7 @@ export default function SearchAdminPage() {
             <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
               <div>
                 <p className="font-medium">{r.title}</p>
-                <p className="text-xs text-muted-foreground">{PLATFORM_MAP[r.platform].name} · {r.category} · {r.type}</p>
+                <p className="text-xs text-muted-foreground">{PLATFORM_MAP[r.platform].name} · {r.category} · {sentenceCase(r.type)}</p>
               </div>
               <div className="flex gap-1">
                 {r.tags.slice(0, 3).map((t) => <Badge key={t} variant="secondary">#{t}</Badge>)}

@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { sentenceCase } from "@/lib/text"
 
 export default function NotificationsPage() {
   const { data, addNotification, updateNotification, removeNotification, sendNotification } = useGate()
@@ -121,7 +122,7 @@ export default function NotificationsPage() {
                   <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as NotificationRecord["type"] })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {["book", "podcast", "research", "infographic", "renewal", "workshop", "certificate", "platform", "featured", "recommendation"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      {["book", "podcast", "research", "infographic", "renewal", "workshop", "certificate", "platform", "featured", "recommendation"].map((t) => <SelectItem key={t} value={t}>{sentenceCase(t)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -140,7 +141,7 @@ export default function NotificationsPage() {
                   <Select value={form.target} onValueChange={(v) => setForm({ ...form, target: v as NotificationRecord["target"] })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {["all", "members", "free"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      {["all", "members", "free"].map((t) => <SelectItem key={t} value={t}>{sentenceCase(t)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

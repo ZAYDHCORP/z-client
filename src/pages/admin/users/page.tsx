@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { sentenceCase } from "@/lib/text"
 
 export default function UsersPage() {
   const { data, updateUser, removeUser, ensureUsersLoaded, loadMore, hasMore, isResourceLoading } = useGate()
@@ -115,13 +116,13 @@ export default function UsersPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className="capitalize">{u.membership}</span>
+                  <span>{sentenceCase(u.membership)}</span>
                   {u.plan && <span className="text-xs text-muted-foreground"> · {u.plan}</span>}
                 </TableCell>
                 <TableCell>
-                  <span className="inline-flex items-center gap-1 text-sm capitalize">
+                  <span className="inline-flex items-center gap-1 text-sm">
                     {u.role === "admin" && <ShieldAlert className="h-3.5 w-3.5 text-rose-500" />}
-                    {u.role}
+                    {sentenceCase(u.role)}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -202,7 +203,7 @@ function UserForm({ user, onSave }: { user: UserRecord; onSave: (p: Partial<User
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {["none", "active", "expired", "lifetime"].map((m) => (
-                <SelectItem key={m} value={m}>{m}</SelectItem>
+                <SelectItem key={m} value={m}>{sentenceCase(m)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -213,7 +214,7 @@ function UserForm({ user, onSave }: { user: UserRecord; onSave: (p: Partial<User
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {["user", "editor", "analyst", "admin"].map((m) => (
-                <SelectItem key={m} value={m}>{m}</SelectItem>
+                <SelectItem key={m} value={m}>{sentenceCase(m)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -226,7 +227,7 @@ function UserForm({ user, onSave }: { user: UserRecord; onSave: (p: Partial<User
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {["active", "suspended", "pending"].map((m) => (
-                <SelectItem key={m} value={m}>{m}</SelectItem>
+                <SelectItem key={m} value={m}>{sentenceCase(m)}</SelectItem>
               ))}
             </SelectContent>
           </Select>

@@ -166,9 +166,9 @@ export function SpiritualContentPage({
           <SelectContent>
             <SelectItem value="all">All verification</SelectItem>
             <SelectItem value="unverified">Unverified</SelectItem>
-            <SelectItem value="under_review">Under Review</SelectItem>
+            <SelectItem value="under_review">Under review</SelectItem>
             <SelectItem value="verified">Verified</SelectItem>
-            <SelectItem value="requires_correction">Requires Correction</SelectItem>
+            <SelectItem value="requires_correction">Requires correction</SelectItem>
           </SelectContent>
         </Select>
         <Select value={catFilter} onValueChange={setCatFilter}>
@@ -271,9 +271,9 @@ export function SpiritualContentPage({
                     <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unverified">Unverified</SelectItem>
-                      <SelectItem value="under_review">Under Review</SelectItem>
+                      <SelectItem value="under_review">Under review</SelectItem>
                       <SelectItem value="verified">Verified</SelectItem>
-                      <SelectItem value="requires_correction">Needs Fix</SelectItem>
+                      <SelectItem value="requires_correction">Needs fix</SelectItem>
                     </SelectContent>
                   </Select>
                 </TableCell>

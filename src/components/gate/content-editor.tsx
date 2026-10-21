@@ -33,29 +33,136 @@ import type {
   SeoAeo,
 } from "@/lib/gate/types";
 import { StatusBadge } from "./ui";
+import { uploadFile } from "@/lib/gate/upload";
+import { FilePreviewDialog } from "./file-preview";
+import { sentenceCase } from "@/lib/text";
 
-function readImageAsDataUrl(file: File, onLoaded: (dataUrl: string) => void) {
-  const reader = new FileReader();
-  reader.onload = () => onLoaded(reader.result as string);
-  reader.readAsDataURL(file);
-}
-
-function ImageUploadButton({ onFile }: { onFile: (file: File) => void }) {
-  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+/** Picks an image and uploads it; the parent receives only the short public URL. */
+function ImageUploadButton({ onUploaded }: { onUploaded: (publicUrl: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  async function handleChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) onFile(file);
     e.target.value = "";
+    if (!file) return;
+    setBusy(true);
+    try {
+      const { publicUrl } = await uploadFile(file);
+      onUploaded(publicUrl);
+    } catch (err) {
+      toast.error((err as Error).message || "Upload failed");
+    } finally {
+      setBusy(false);
+    }
   }
   return (
-    <label className="mt-2 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-xs hover:bg-accent/40">
-      <Upload className="h-3.5 w-3.5" /> Upload image
+    <label
+      className={`mt-2 flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-xs ${
+        busy ? "cursor-wait opacity-60" : "cursor-pointer hover:bg-accent/40"
+      }`}
+    >
+      <Upload className="h-3.5 w-3.5" /> {busy ? "Uploading…" : "Upload image"}
       <input
         type="file"
         accept="image/*"
         className="hidden"
+        disabled={busy}
         onChange={handleChange}
       />
     </label>
+  );
+}
+
+/**
+ * A PDF field: paste a link or upload a file. The upload goes straight to storage
+ * (signed upload) and only the short public link is kept on the book.
+ */
+function PdfUploadField({
+  label,
+  hint,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  hint?: string;
+  value: string;
+  onChange: (url: string) => void;
+  placeholder: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  async function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Please choose a PDF file.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { publicUrl } = await uploadFile(file);
+      onChange(publicUrl);
+      toast.success(`${file.name} uploaded`);
+    } catch (err) {
+      toast.error((err as Error).message || "Upload failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">{label}</Label>
+      <div className="flex gap-2">
+        <Input
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <label
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-background px-3 text-sm ${
+            busy ? "cursor-wait opacity-60" : "cursor-pointer hover:bg-accent/40"
+          }`}
+        >
+          <Upload className="h-4 w-4" /> {busy ? "Uploading…" : "Upload PDF"}
+          <input
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            disabled={busy}
+            onChange={handleChange}
+          />
+        </label>
+      </div>
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {value && (
+        <p className="flex items-center gap-3 text-xs">
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+            onClick={() => setPreviewOpen(true)}
+          >
+            <Eye className="h-3.5 w-3.5" /> Preview
+          </button>
+          <a href={value} target="_blank" rel="noreferrer" className="font-medium text-primary underline">
+            Open in new tab
+          </a>
+          <button
+            type="button"
+            className="text-muted-foreground hover:text-rose-600"
+            onClick={() => onChange("")}
+          >
+            Remove
+          </button>
+        </p>
+      )}
+      <FilePreviewDialog
+        file={previewOpen ? { url: value, name: label, mime: "application/pdf" } : null}
+        onClose={() => setPreviewOpen(false)}
+      />
+    </div>
   );
 }
 
@@ -236,11 +343,7 @@ export function ContentEditor({
                   }
                 />
                 <ImageUploadButton
-                  onFile={(file) =>
-                    readImageAsDataUrl(file, (dataUrl) =>
-                      set({ cover: dataUrl } as Partial<AnyContent>),
-                    )
-                  }
+                  onUploaded={(url) => set({ cover: url } as Partial<AnyContent>)}
                 />
               </div>
               <div className="flex-1 space-y-3">
@@ -295,11 +398,7 @@ export function ContentEditor({
                   }
                 />
                 <ImageUploadButton
-                  onFile={(file) =>
-                    readImageAsDataUrl(file, (dataUrl) =>
-                      set({ image: dataUrl } as Partial<AnyContent>),
-                    )
-                  }
+                  onUploaded={(url) => set({ image: url } as Partial<AnyContent>)}
                 />
               </div>
               <div className="flex-1 space-y-3">
@@ -381,6 +480,13 @@ export function ContentEditor({
                   }
                   placeholder="https://…/episode.mp3"
                 />
+                {(form as PodcastEpisode).audioUrl && (
+                  <audio
+                    controls
+                    src={(form as PodcastEpisode).audioUrl}
+                    className="mt-2 w-full"
+                  />
+                )}
               </Field>
             </div>
           )}
@@ -440,7 +546,7 @@ export function ContentEditor({
                     "archived",
                   ].map((s) => (
                     <SelectItem key={s} value={s}>
-                      {s}
+                      {sentenceCase(s)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -486,6 +592,19 @@ export function ContentEditor({
             </Field>
           </div>
 
+          {/* Full book / report PDF */}
+          {(type === "book" || type === "research") && (
+            <div className="rounded-lg border border-border p-3">
+              <PdfUploadField
+                label={type === "book" ? "Book PDF" : "Report PDF"}
+                hint="The full file — upload it here or paste a link."
+                placeholder="https://…/book.pdf"
+                value={(form as BookContent).pdfUrl ?? ""}
+                onChange={(url) => set({ pdfUrl: url } as Partial<AnyContent>)}
+              />
+            </div>
+          )}
+
           {/* Purchase links for books/research */}
           {(type === "book" || type === "research") && (
             <PurchaseLinksEditor
@@ -504,7 +623,7 @@ export function ContentEditor({
                 <div>
                   <p className="text-sm font-medium">Enable Free Sample</p>
                   <p className="text-xs text-muted-foreground">
-                    Upload a separate Free Sample PDF for the in-app reader.
+                    Upload a short sample PDF that visitors can read before buying.
                   </p>
                 </div>
                 <Switch
@@ -515,16 +634,17 @@ export function ContentEditor({
                 />
               </div>
               {(form as BookContent).freeSampleEnabled && (
-                <Input
-                  className="mt-3"
-                  placeholder="Free Sample PDF URL"
-                  value={(form as BookContent).freeSamplePdf ?? ""}
-                  onChange={(e) =>
-                    set({
-                      freeSamplePdf: e.target.value,
-                    } as Partial<AnyContent>)
-                  }
-                />
+                <div className="mt-3">
+                  <PdfUploadField
+                    label="Free sample PDF"
+                    hint='Readers see this when they press "Read Free Sample" on the home page.'
+                    placeholder="https://…/sample.pdf"
+                    value={(form as BookContent).freeSamplePdf ?? ""}
+                    onChange={(url) =>
+                      set({ freeSamplePdf: url } as Partial<AnyContent>)
+                    }
+                  />
+                </div>
               )}
             </div>
           )}
@@ -646,9 +766,9 @@ export function ContentEditor({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="summary">summary</SelectItem>
+                        <SelectItem value="summary">Summary</SelectItem>
                         <SelectItem value="summary_large_image">
-                          summary_large_image
+                          Summary large image
                         </SelectItem>
                       </SelectContent>
                     </Select>

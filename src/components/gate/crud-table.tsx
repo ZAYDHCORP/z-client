@@ -1,6 +1,7 @@
 import { useMemo, useState, type ChangeEvent } from "react"
-import { Plus, Pencil, Trash2, Search, Upload, FileText } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, Upload, FileText, Eye } from "lucide-react"
 import { toast } from "sonner"
+import { uploadFile } from "@/lib/gate/upload"
 import { PageHeader } from "@/components/gate/ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -61,6 +62,7 @@ export function CrudTable<T extends { id: string }>({
   onLoadMore,
   hasMore,
   loadingMore,
+  onPreview,
 }: {
   title: string
   description?: string
@@ -78,6 +80,8 @@ export function CrudTable<T extends { id: string }>({
   onLoadMore?: () => void
   hasMore?: boolean
   loadingMore?: boolean
+  /** When given, each row gets an eye button that previews it. */
+  onPreview?: (row: T) => void
 }) {
   const [q, setQ] = useState("")
   const [editing, setEditing] = useState<T | null>(null)
@@ -145,6 +149,11 @@ export function CrudTable<T extends { id: string }>({
                 ))}
                 <TableCell>
                   <div className="flex justify-end gap-1">
+                    {onPreview && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" title="Preview" onClick={() => onPreview(row)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => openEdit(row)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -270,12 +279,20 @@ function IconField({
   onChange: (v: any) => void
   record?: any
 }) {
-  function onFile(e: ChangeEvent<HTMLInputElement>) {
+  const [busy, setBusy] = useState(false)
+  async function onFile(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
+    e.target.value = ""
     if (!f) return
-    const reader = new FileReader()
-    reader.onload = () => onChange(reader.result as string)
-    reader.readAsDataURL(f)
+    setBusy(true)
+    try {
+      const { publicUrl } = await uploadFile(f)
+      onChange(publicUrl)
+    } catch (err) {
+      toast.error((err as Error).message || "Upload failed")
+    } finally {
+      setBusy(false)
+    }
   }
   return (
     <div className="space-y-3">
@@ -287,8 +304,8 @@ function IconField({
           className="max-w-[240px]"
         />
         <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm hover:bg-accent/40">
-          <Upload className="h-4 w-4" /> Attach PNG logo
-          <input type="file" accept="image/png,image/*" className="hidden" onChange={onFile} />
+          <Upload className="h-4 w-4" /> {busy ? "Uploading…" : "Attach PNG logo"}
+          <input type="file" accept="image/png,image/*" className="hidden" disabled={busy} onChange={onFile} />
         </label>
       </div>
       <div className="flex items-center gap-3 overflow-hidden rounded-lg border border-border bg-card p-3">
@@ -312,19 +329,11 @@ function IconField({
   )
 }
 
-const MAX_FILE_MB = 2
-
-function mediaTypeOf(mime: string): "image" | "pdf" | "audio" | null {
-  if (mime.startsWith("image/")) return "image"
-  if (mime === "application/pdf") return "pdf"
-  if (mime.startsWith("audio/")) return "audio"
-  return null
-}
-
 /**
- * Pick a file from the device. Fills the record's url (as an embedded data URL —
- * there is no storage endpoint yet), plus name / type / mime / size / dimensions,
- * so the admin never has to type those by hand. A pasted link still works.
+ * Pick a file from the device and upload it (signed upload straight to storage).
+ * On success the record gets the short public URL plus name / type / mime / size /
+ * dimensions, so the admin never types those by hand. While the upload runs the
+ * record is flagged `__uploading` so Save can wait for it.
  */
 function FileField({
   accept,
@@ -339,57 +348,68 @@ function FileField({
   record?: any
   fieldName: string
 }) {
-  function onFile(e: ChangeEvent<HTMLInputElement>) {
+  const [localPreview, setLocalPreview] = useState<string | null>(null)
+  const uploading = Boolean(record?.__uploading)
+
+  async function onFile(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     e.target.value = ""
     if (!f) return
-    const type = mediaTypeOf(f.type)
-    if (!type) return toast.error("Choose an image, PDF or audio file.")
-    if (f.size > MAX_FILE_MB * 1024 * 1024) {
-      return toast.error(`File is too large (max ${MAX_FILE_MB} MB).`)
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const url = reader.result as string
-      const patch: Record<string, unknown> = {
-        [fieldName]: url,
-        type,
+    const preview = f.type.startsWith("image/") ? URL.createObjectURL(f) : null
+    setLocalPreview(preview)
+    onPatch({ __uploading: true })
+
+    // Image size is read from the local file while the upload runs.
+    const dims = preview
+      ? await new Promise<{ width?: number; height?: number }>((resolve) => {
+          const img = new Image()
+          img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight })
+          img.onerror = () => resolve({})
+          img.src = preview
+        })
+      : {}
+
+    try {
+      const { publicUrl, kind } = await uploadFile(f)
+      onPatch({
+        [fieldName]: publicUrl,
+        type: kind,
         mime: f.type,
-        sizeKB: Math.max(1, Math.round(f.size / 1024)),
+        sizeKB: Math.max(1, Math.ceil(f.size / 1024)),
         name: record?.name ? record.name : f.name,
-        width: undefined,
-        height: undefined,
-      }
-      if (type === "image") {
-        const img = new Image()
-        img.onload = () => onPatch({ ...patch, width: img.naturalWidth, height: img.naturalHeight })
-        img.onerror = () => onPatch(patch)
-        img.src = url
-      } else {
-        onPatch(patch)
-      }
+        ...dims,
+        __uploading: false,
+      })
+    } catch (err) {
+      toast.error((err as Error).message || "Upload failed")
+      onPatch({ __uploading: false })
     }
-    reader.readAsDataURL(f)
   }
 
   const hasFile = typeof value === "string" && value.length > 0
-  const isImage = hasFile && (value.startsWith("data:image/") || record?.type === "image")
+  const previewSrc = localPreview ?? (hasFile && record?.type === "image" ? value : null)
 
   return (
     <div className="space-y-2">
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 px-4 py-8 text-sm text-muted-foreground transition-colors hover:border-gold/60 hover:bg-gold-soft">
-        {hasFile && isImage ? (
-          <img src={value} alt="" className="max-h-40 rounded-md object-contain" />
+      <label
+        className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 px-4 py-8 text-sm text-muted-foreground transition-colors ${
+          uploading ? "cursor-wait" : "cursor-pointer hover:border-gold/60 hover:bg-gold-soft"
+        }`}
+      >
+        {previewSrc ? (
+          <img src={previewSrc} alt="" className="max-h-40 rounded-md object-contain" />
         ) : hasFile ? (
           <FileText className="h-8 w-8" />
         ) : (
           <Upload className="h-6 w-6" />
         )}
-        <span className="font-medium text-foreground">{hasFile ? "Replace file" : "Choose a file to upload"}</span>
-        <span className="text-xs">Image, PDF or audio · up to {MAX_FILE_MB} MB</span>
-        <input type="file" accept={accept} className="hidden" onChange={onFile} />
+        <span className="font-medium text-foreground">
+          {uploading ? "Uploading…" : hasFile ? "Replace file" : "Choose a file to upload"}
+        </span>
+        <span className="text-xs">Image, PDF or audio</span>
+        <input type="file" accept={accept} className="hidden" disabled={uploading} onChange={onFile} />
       </label>
-      {hasFile && (
+      {hasFile && !uploading && (
         <p className="truncate text-xs text-muted-foreground">
           {record?.name} · {record?.mime}
           {record?.sizeKB ? ` · ${record.sizeKB} KB` : ""}

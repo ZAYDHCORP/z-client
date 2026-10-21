@@ -45,7 +45,8 @@ import {
 } from "@/components/ui/dialog"
 import { StatusBadge } from "./ui"
 import { ContentEditor } from "./content-editor"
-import { useGate } from "@/lib/gate/store"
+import { RESOURCE_KEY_OF_TYPE, useGate } from "@/lib/gate/store"
+import { FilePreviewDialog } from "./file-preview"
 import { PLATFORMS, PLATFORM_MAP } from "@/lib/gate/platforms"
 import type {
   AnyContent,
@@ -57,6 +58,7 @@ import type {
   ResearchContent,
 } from "@/lib/gate/types"
 import { cn } from "@/lib/utils"
+import { sentenceCase } from "@/lib/text"
 
 const typeKey: Record<ContentType, keyof ReturnType<typeof useGate>["data"]> = {
   book: "books",
@@ -77,13 +79,15 @@ export function ContentTable({ type }: { type: ContentType }) {
     hasMore,
     isResourceLoading,
     ensureCategoriesLoaded,
-    ensureContentLoaded,
+    ensureContentTypeLoaded,
   } = useGate()
 
+  // Ask the server for this type only — the Books tab never pulls podcasts, etc.
+  const resource = RESOURCE_KEY_OF_TYPE[type]
   useEffect(() => {
     ensureCategoriesLoaded()
-    ensureContentLoaded()
-  }, [ensureCategoriesLoaded, ensureContentLoaded])
+    ensureContentTypeLoaded(type)
+  }, [ensureCategoriesLoaded, ensureContentTypeLoaded, type])
 
   const [query, setQuery] = useState("")
   const [platform, setPlatform] = useState<string>("all")
@@ -164,7 +168,7 @@ export function ContentTable({ type }: { type: ContentType }) {
             {["draft", "scheduled", "published", "unpublished", "archived"].map(
               (s) => (
                 <SelectItem key={s} value={s}>
-                  {s}
+                  {sentenceCase(s)}
                 </SelectItem>
               ),
             )}
@@ -307,14 +311,10 @@ export function ContentTable({ type }: { type: ContentType }) {
         </Table>
       </div>
 
-      {/* Books/research/infographics/podcasts all come from one shared,
-          mixed-type /admin/content endpoint — "Load more" advances that one
-          shared page cursor, so a click here may bring in mostly other
-          content types before more of *this* type shows up. */}
-      {hasMore("content") && !query && platform === "all" && status === "all" && (
+      {hasMore(resource) && !query && platform === "all" && status === "all" && (
         <div className="flex justify-center">
-          <Button variant="outline" onClick={() => loadMore("content")} disabled={isResourceLoading("content")}>
-            {isResourceLoading("content") ? "Loading…" : "Load more"}
+          <Button variant="outline" onClick={() => loadMore(resource)} disabled={isResourceLoading(resource)}>
+            {isResourceLoading(resource) ? "Loading…" : "Load more"}
           </Button>
         </div>
       )}
@@ -379,7 +379,9 @@ function PreviewDialog({
   item: AnyContent | null
   onClose: () => void
 }) {
+  const [file, setFile] = useState<{ url: string; name: string; mime?: string } | null>(null)
   if (!item) return null
+  const book = item.type === "book" || item.type === "research" ? (item as BookContent) : null
   const src =
     item.type === "infographic"
       ? (item as InfographicContent).image
@@ -421,13 +423,26 @@ function PreviewDialog({
                 </span>
               ))}
             </div>
-            {item.type === "podcast" && (
-              <p className="text-xs text-muted-foreground">
-                Audio: {(item as PodcastEpisode).audioUrl || "—"}
-              </p>
+            {item.type === "podcast" && (item as PodcastEpisode).audioUrl && (
+              <audio controls src={(item as PodcastEpisode).audioUrl} className="w-full" />
+            )}
+            {book && (book.pdfUrl || (book.freeSampleEnabled && book.freeSamplePdf)) && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {book.pdfUrl && (
+                  <Button size="sm" variant="outline" onClick={() => setFile({ url: book.pdfUrl!, name: `${item.title} — PDF`, mime: "application/pdf" })}>
+                    <Eye className="mr-1.5 h-3.5 w-3.5" /> Preview PDF
+                  </Button>
+                )}
+                {book.freeSampleEnabled && book.freeSamplePdf && (
+                  <Button size="sm" variant="outline" onClick={() => setFile({ url: book.freeSamplePdf!, name: `${item.title} — free sample`, mime: "application/pdf" })}>
+                    <Eye className="mr-1.5 h-3.5 w-3.5" /> Preview free sample
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </div>
+        <FilePreviewDialog file={file} onClose={() => setFile(null)} />
       </DialogContent>
     </Dialog>
   )

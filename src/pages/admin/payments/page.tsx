@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { sentenceCase } from "@/lib/text"
 
 /**
  * Read-only reporting. Filters (status / user name search) are applied by the
@@ -110,7 +111,7 @@ export default function PaymentsPage() {
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             {["success", "pending", "failed", "refunded"].map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+              <SelectItem key={s} value={s}>{sentenceCase(s)}</SelectItem>
             ))}
           </SelectContent>
         </Select>

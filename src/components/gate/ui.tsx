@@ -1,5 +1,6 @@
 import { Inbox } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { sentenceCase } from "@/lib/text"
 import type { ContentStatus, PlatformId, VerificationStatus } from "@/lib/gate/types"
 import { PLATFORM_MAP } from "@/lib/gate/platforms"
 
@@ -37,13 +38,13 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset ring-current/15",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ring-current/15",
         statusStyles[key] ?? "bg-muted text-muted-foreground",
         className,
       )}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
-      {label ?? key.replace(/_/g, " ")}
+      {label ?? sentenceCase(key)}
     </span>
   )
 }
@@ -59,12 +60,12 @@ export function VerifyBadge({ status }: { status: VerificationStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset ring-current/15",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ring-current/15",
         verifyStyles[status],
       )}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
-      {status.replace(/_/g, " ")}
+      {sentenceCase(status)}
     </span>
   )
 }

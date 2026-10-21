@@ -79,7 +79,7 @@ const SERVER_OWNED = new Set([
 function toBody(record: object, mode: "create" | "update"): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(record)) {
-    if (SERVER_OWNED.has(k) || v === undefined) continue;
+    if (SERVER_OWNED.has(k) || k.startsWith("__") || v === undefined) continue;
     if (v === "" && (mode === "create" || /url$/i.test(k))) continue;
     out[k] = v;
   }
@@ -302,7 +302,8 @@ export const adminApi = {
   },
   content: {
     count: (filters: Filters = {}) => count(withFilters(API.ADMIN.CONTENT, filters)),
-    list: <T>(page = 1) => list<T>(API.ADMIN.CONTENT, "content", page),
+    list: <T>(page = 1, filters: Filters = {}) =>
+      list<T>(withFilters(API.ADMIN.CONTENT, filters), "content", page),
     get: <T>(id: string) => getOne<T>(API.ADMIN.CONTENT_BY_ID(id)),
     create: <T>(body: unknown) => createOne<T>(API.ADMIN.CONTENT, body),
     update: <T>(id: string, body: unknown) =>

@@ -29,6 +29,7 @@ import {
   type SpiritualContent,
   type VerificationStatus,
 } from "@/lib/gate/theocentric/types"
+import { sentenceCase } from "@/lib/text"
 
 const REP_OPTIONS = ["none", "1", "3", "7", "10", "33", "100", "custom"]
 
@@ -278,7 +279,7 @@ export function SpiritualEditor({
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {(["unverified", "under_review", "verified", "requires_correction"] as VerificationStatus[]).map((v) => (
-                        <SelectItem key={v} value={v}>{v.replace(/_/g, " ")}</SelectItem>
+                        <SelectItem key={v} value={v}>{sentenceCase(v)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -288,7 +289,7 @@ export function SpiritualEditor({
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {(["draft", "published", "unpublished", "archived"] as PublicationStatus[]).map((v) => (
-                        <SelectItem key={v} value={v}>{v}</SelectItem>
+                        <SelectItem key={v} value={v}>{sentenceCase(v)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

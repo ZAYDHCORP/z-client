@@ -3,6 +3,7 @@ import { CrudTable } from "@/components/gate/crud-table"
 import { useGate } from "@/lib/gate/store"
 import { PLATFORMS } from "@/lib/gate/platforms"
 import type { SocialLink } from "@/lib/gate/types"
+import { sentenceCase } from "@/lib/text"
 
 const platformOpts = [
   { value: "ALL", label: "All / Global" },
@@ -11,7 +12,7 @@ const platformOpts = [
 const typeOpts = [
   "website", "youtube", "spotify", "apple", "instagram", "facebook",
   "linkedin", "x", "whatsapp_community", "whatsapp_channel", "whatsapp_contact", "service_enquiry",
-].map((t) => ({ value: t, label: t.replace(/_/g, " ") }))
+].map((t) => ({ value: t, label: sentenceCase(t) }))
 
 export default function SocialLinksPage() {
   const { data, addSocialLink, updateSocialLink, removeSocialLink, ensureSocialLinksLoaded, loadMore, hasMore, isResourceLoading } = useGate()
@@ -52,7 +53,7 @@ export default function SocialLinksPage() {
       ]}
       columns={[
         { header: "Label", cell: (r) => <span className="font-medium">{r.label}</span> },
-        { header: "Type", cell: (r) => r.type.replace(/_/g, " ") },
+        { header: "Type", cell: (r) => sentenceCase(r.type) },
         { header: "Platform", cell: (r) => r.platform },
         { header: "Active", cell: (r) => (r.active ? "✓" : "✕") },
       ]}

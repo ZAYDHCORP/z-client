@@ -14,6 +14,7 @@ import { PageHeader, StatCard, SectionTitle } from "@/components/gate/ui"
 import { useTheo, useTheoContent } from "@/lib/gate/theocentric/store"
 import { adminApi } from "@/lib/gate/adminApi"
 import type { ContentKind } from "@/lib/gate/theocentric/types"
+import { sentenceCase } from "@/lib/text"
 
 const KIND_META: { kind: ContentKind; label: string; icon: React.ReactNode; href: string }[] = [
   { kind: "dua", label: "Duas", icon: <Heart className="h-4 w-4" />, href: "/admin/theocentric/duas" },
@@ -120,10 +121,10 @@ export default function TheoDashboard() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{c.title || "Untitled"}</p>
                     <p className="text-xs text-muted-foreground">
-                      {c.kind} · {new Date(c.updatedAt).toLocaleDateString()}
+                      {sentenceCase(c.kind)} · {new Date(c.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <span className="text-xs text-muted-foreground">{c.status}</span>
+                  <span className="text-xs text-muted-foreground">{sentenceCase(c.status)}</span>
                 </Link>
               ))}
             </div>

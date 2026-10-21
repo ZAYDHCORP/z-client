@@ -97,7 +97,7 @@ export default function TheoSettingsPage() {
           <Input
             value={defaultJourney.join(", ")}
             onChange={(e) => setDefaultJourney(e.target.value.split(",").map((x) => x.trim()).filter(Boolean))}
-            placeholder="comma separated section keys"
+            placeholder="Comma-separated section keys"
           />
         </div>
 

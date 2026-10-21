@@ -132,9 +132,9 @@ export default function ApiManagementPage() {
               <Select value={form.scope} onValueChange={(v) => setForm({ ...form, scope: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="read">read</SelectItem>
-                  <SelectItem value="write">write</SelectItem>
-                  <SelectItem value="admin">admin</SelectItem>
+                  <SelectItem value="read">Read</SelectItem>
+                  <SelectItem value="write">Write</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -158,9 +158,9 @@ function SeoEditor({ content, onClose }: { content: AnyContent; onClose: () => v
           <Select value={form.robots} onValueChange={(v) => set({ robots: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="index,follow">index, follow</SelectItem>
-              <SelectItem value="noindex">noindex</SelectItem>
-              <SelectItem value="index,nofollow">index, nofollow</SelectItem>
+              <SelectItem value="index,follow">Index, follow</SelectItem>
+              <SelectItem value="noindex">Noindex</SelectItem>
+              <SelectItem value="index,nofollow">Index, nofollow</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -169,8 +169,8 @@ function SeoEditor({ content, onClose }: { content: AnyContent; onClose: () => v
           <Select value={form.twitterCard} onValueChange={(v) => set({ twitterCard: v as "summary" | "summary_large_image" })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="summary">summary</SelectItem>
-              <SelectItem value="summary_large_image">summary_large_image</SelectItem>
+              <SelectItem value="summary">Summary</SelectItem>
+              <SelectItem value="summary_large_image">Summary large image</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -116,8 +116,8 @@ export default function SettingsPage() {
                 <Select value={form.seoDefaults.twitterCard} onValueChange={(v) => setSeo({ twitterCard: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="summary">summary</SelectItem>
-                    <SelectItem value="summary_large_image">summary_large_image</SelectItem>
+                    <SelectItem value="summary">Summary</SelectItem>
+                    <SelectItem value="summary_large_image">Summary large image</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

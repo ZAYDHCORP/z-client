@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { sentenceCase } from "@/lib/text"
 
 export default function AuditLogsPage() {
   const { data, ensureAuditLogsLoaded, loadMore, hasMore, isResourceLoading } = useGate()
@@ -87,9 +88,9 @@ export default function AuditLogsPage() {
               {filtered.map((a) => (
                 <TableRow key={a.id}>
                   <TableCell className="text-sm font-medium">{a.actor}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{a.role}</TableCell>
-                  <TableCell className="text-sm">{a.action}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{a.resource}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{sentenceCase(a.role)}</TableCell>
+                  <TableCell className="text-sm">{sentenceCase(a.action)}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{sentenceCase(a.resource)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{a.ip}</TableCell>
                   <TableCell><StatusBadge status={a.result} /></TableCell>
                   <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{new Date(a.timestamp).toLocaleString()}</TableCell>

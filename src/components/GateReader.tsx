@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import type { PDFDocumentProxy } from "pdfjs-dist";
 import {
   X,
   ChevronLeft,
@@ -67,12 +68,75 @@ const DEFAULT_SAMPLE_BOOK: BookSampleData = {
   ]
 };
 
+const PDF_THEME_FILTER = {
+  light: "none",
+  sepia: "sepia(0.45) saturate(0.9)",
+  dark: "invert(0.92) hue-rotate(180deg)",
+} as const;
+
+/** Draws one page of an uploaded PDF, sharp at any zoom, tinted to match the reader theme. */
+function PdfPage({
+  pdf,
+  pageIndex,
+  zoom,
+  theme,
+}: {
+  pdf: PDFDocumentProxy;
+  pageIndex: number;
+  zoom: number;
+  theme: "light" | "sepia" | "dark";
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let task: { cancel: () => void; promise: Promise<unknown> } | null = null;
+    (async () => {
+      const page = await pdf.getPage(pageIndex + 1);
+      const canvas = canvasRef.current;
+      const width = wrapRef.current?.clientWidth || 640;
+      if (cancelled || !canvas) return;
+      const base = page.getViewport({ scale: 1 });
+      const fit = width / base.width;
+      const dpr = window.devicePixelRatio || 1;
+      const viewport = page.getViewport({ scale: fit * dpr * (zoom / 100) });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      canvas.style.width = `${base.width * fit}px`;
+      canvas.style.height = `${base.height * fit}px`;
+      task = page.render({ canvas, viewport });
+      await task.promise;
+    })().catch(() => {});
+    return () => {
+      cancelled = true;
+      task?.cancel();
+    };
+  }, [pdf, pageIndex, zoom]);
+
+  return (
+    <div ref={wrapRef} className="w-full">
+      <canvas
+        ref={canvasRef}
+        className="mx-auto block rounded-md shadow-lg"
+        style={{ filter: PDF_THEME_FILTER[theme] }}
+      />
+    </div>
+  );
+}
+
 export default function GateReader({
   book = DEFAULT_SAMPLE_BOOK,
   onClose,
+  pdfUrl,
+  onPdfUnavailable,
 }: {
   book?: BookSampleData;
   onClose: () => void;
+  /** When given, the reader shows the real pages of this PDF instead of the sample text. */
+  pdfUrl?: string;
+  /** Called if the PDF can't be loaded into the reader, so the caller can fall back. */
+  onPdfUnavailable?: (reason: string) => void;
 }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [zoom, setZoom] = useState(100);
@@ -84,8 +148,71 @@ export default function GateReader({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [turningPage, setTurningPage] = useState<"next" | "prev" | null>(null);
 
+  // ---- PDF mode ----------------------------------------------------------
+  const isPdf = Boolean(pdfUrl);
+  const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
+  const [pdfCount, setPdfCount] = useState(0);
+  const [pdfLoading, setPdfLoading] = useState(isPdf);
+  const [outline, setOutline] = useState<{ title: string; page: number }[]>([]);
+  const [pdfResults, setPdfResults] = useState<{ pageIndex: number; title: string; snippet: string }[]>([]);
+  const pageTexts = useRef(new Map<number, string>());
+
+  useEffect(() => {
+    if (!pdfUrl) return;
+    let cancelled = false;
+    setPdfLoading(true);
+    (async () => {
+      try {
+        const pdfjs = await import("pdfjs-dist");
+        const worker = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+        pdfjs.GlobalWorkerOptions.workerSrc = worker;
+        const doc = await pdfjs.getDocument({ url: pdfUrl }).promise;
+        if (cancelled) return;
+        setPdf(doc);
+        setPdfCount(doc.numPages);
+        setPdfLoading(false);
+        // Table of contents from the PDF's own outline (if it has one).
+        try {
+          const raw = (await doc.getOutline()) ?? [];
+          const flat: { title: string; page: number }[] = [];
+          for (const item of raw) {
+            for (const entry of [item, ...(item.items ?? [])]) {
+              try {
+                const dest = typeof entry.dest === "string" ? await doc.getDestination(entry.dest) : entry.dest;
+                if (dest?.[0]) flat.push({ title: entry.title, page: await doc.getPageIndex(dest[0]) });
+              } catch {
+                /* entry without a usable destination */
+              }
+            }
+          }
+          if (!cancelled) setOutline(flat);
+        } catch {
+          /* no outline */
+        }
+      } catch (err) {
+        console.error("The PDF reader could not load this file:", pdfUrl, err);
+        if (!cancelled) {
+          setPdfLoading(false);
+          const e = err as { name?: string; message?: string };
+          onPdfUnavailable?.(`${e?.name ?? "Error"}: ${e?.message ?? String(err)}`);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pdfUrl]);
+
   // Flatten book pages (title page + chapter pages)
   const pages = React.useMemo(() => {
+    if (isPdf) {
+      const titles = new Map(outline.map((o) => [o.page, o.title]));
+      return Array.from({ length: pdfCount }, (_, i) => ({
+        type: "chapter" as const,
+        title: titles.get(i) ?? `Page ${i + 1}`,
+        text: [] as string[],
+      }));
+    }
     const list: { type: "cover" | "chapter"; title: string; text: string[]; chapterIndex?: number }[] = [];
     list.push({
       type: "cover",
@@ -104,9 +231,9 @@ export default function GateReader({
     });
 
     return list;
-  }, [book]);
+  }, [book, isPdf, pdfCount, outline]);
 
-  const totalPages = pages.length;
+  const totalPages = Math.max(pages.length, 1);
 
   const handleNext = () => {
     if (currentPage < totalPages - 1) {
@@ -183,7 +310,42 @@ export default function GateReader({
     dark: "bg-[#18181b] text-zinc-100 border-zinc-800",
   }[readerTheme];
 
-  const currentPageData = pages[currentPage];
+  const currentPageData = pages[currentPage] ?? { type: "chapter" as const, title: "", text: [] as string[] };
+
+  // PDF search: read each page's text once, then look for the keyword.
+  useEffect(() => {
+    if (!isPdf || !pdf || !searchQuery.trim()) {
+      setPdfResults([]);
+      return;
+    }
+    let cancelled = false;
+    const q = searchQuery.trim().toLowerCase();
+    const timer = setTimeout(async () => {
+      const found: { pageIndex: number; title: string; snippet: string }[] = [];
+      for (let i = 0; i < Math.min(pdf.numPages, 400) && !cancelled; i++) {
+        let text = pageTexts.current.get(i);
+        if (text === undefined) {
+          const page = await pdf.getPage(i + 1);
+          const content = await page.getTextContent();
+          text = content.items.map((it) => ("str" in it ? it.str : "")).join(" ");
+          pageTexts.current.set(i, text);
+        }
+        const at = text.toLowerCase().indexOf(q);
+        if (at >= 0) {
+          found.push({
+            pageIndex: i,
+            title: `Page ${i + 1}`,
+            snippet: `${at > 30 ? "…" : ""}${text.slice(Math.max(0, at - 30), at + 70)}…`,
+          });
+        }
+      }
+      if (!cancelled) setPdfResults(found);
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, pdf, isPdf]);
 
   // Search results
   const searchResults = React.useMemo(() => {
@@ -202,6 +364,10 @@ export default function GateReader({
     });
     return matches;
   }, [searchQuery, pages]);
+
+  const results = isPdf ? pdfResults : searchResults;
+  // Contents drawer: the PDF's own outline when it has one, otherwise every page.
+  const tocEntries = isPdf && outline.length > 0 ? pages.map((p, idx) => ({ p, idx })).filter(({ idx }) => outline.some((o) => o.page === idx)) : pages.map((p, idx) => ({ p, idx }));
 
   return (
     <div className={`fixed inset-0 z-[100] flex flex-col font-serif ${themeClasses} transition-colors duration-300`}>
@@ -304,7 +470,7 @@ export default function GateReader({
 
       {/* Main Reading Area */}
       <div
-        className="relative flex-1 overflow-hidden flex items-center justify-center p-4 sm:p-8"
+        className={`relative flex-1 flex justify-center p-4 sm:p-8 ${isPdf ? "items-start overflow-y-auto" : "items-center overflow-hidden"}`}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -321,7 +487,7 @@ export default function GateReader({
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider opacity-60 mb-2">Chapters</h4>
                 <div className="space-y-1">
-                  {pages.map((p, idx) => (
+                  {tocEntries.map(({ p, idx }) => (
                     <button
                       key={idx}
                       onClick={() => {
@@ -332,7 +498,7 @@ export default function GateReader({
                         currentPage === idx ? "bg-[#9a6d35] text-white font-semibold" : "hover:bg-black/5 dark:hover:bg-white/10"
                       }`}
                     >
-                      {idx === 0 ? "Cover & Preface" : p.title}
+                      {!isPdf && idx === 0 ? "Cover & Preface" : p.title}
                     </button>
                   ))}
                 </div>
@@ -380,10 +546,10 @@ export default function GateReader({
               autoFocus
             />
             <div className="mt-4 space-y-2">
-              {searchResults.length === 0 && searchQuery && (
+              {results.length === 0 && searchQuery && (
                 <p className="text-sm opacity-60">No matches found.</p>
               )}
-              {searchResults.map((res, i) => (
+              {results.map((res, i) => (
                 <button
                   key={i}
                   onClick={() => {
@@ -403,15 +569,25 @@ export default function GateReader({
 
         {/* Book Page Frame with Page Turn Animation */}
         <div
-          className={`relative max-w-3xl w-full mx-auto min-h-[500px] sm:min-h-[640px] rounded-3xl border border-current/10 shadow-2xl p-6 sm:p-12 flex flex-col justify-between transition-all duration-300 transform ${
+          className={`relative max-w-3xl w-full mx-auto min-h-[500px] sm:min-h-[640px] rounded-3xl border border-current/10 shadow-2xl flex flex-col justify-between transition-all duration-300 transform ${isPdf ? "p-3 sm:p-6" : "p-6 sm:p-12"} ${
             turningPage === "next"
               ? "-rotate-1 translate-x-4 opacity-75 scale-[0.98]"
               : turningPage === "prev"
               ? "rotate-1 -translate-x-4 opacity-75 scale-[0.98]"
               : "rotate-0 translate-x-0 opacity-100 scale-100"
           }`}
-          style={{ zoom: `${zoom}%` }}
+          style={isPdf ? undefined : { zoom: `${zoom}%` }}
         >
+          {isPdf ? (
+            pdf ? (
+              <PdfPage pdf={pdf} pageIndex={currentPage} zoom={zoom} theme={readerTheme} />
+            ) : (
+              <p className="py-24 text-center font-sans text-sm opacity-60">
+                {pdfLoading ? "Opening the PDF…" : "This PDF could not be opened."}
+              </p>
+            )
+          ) : (
+            <>
           {/* Header metadata */}
           <div className="flex justify-between items-center text-xs opacity-50 font-sans uppercase tracking-widest border-b border-current/10 pb-3">
             <span>{book.author}</span>
@@ -454,6 +630,8 @@ export default function GateReader({
               {currentPage + 1} / {totalPages}
             </span>
           </div>
+            </>
+          )}
         </div>
 
         {/* Desktop Prev/Next Floating Buttons */}

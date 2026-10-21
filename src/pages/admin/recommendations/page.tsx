@@ -6,6 +6,7 @@ import { PLATFORM_MAP } from "@/lib/gate/platforms"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { sentenceCase } from "@/lib/text"
 
 export default function RecommendationsPage() {
   const { data, toggleFeatured, ensureContentLoaded } = useGate()
@@ -54,7 +55,7 @@ export default function RecommendationsPage() {
               <div className="flex gap-1">
                 {["all", "book", "research", "infographic", "podcast"].map((t) => (
                   <Button key={t} size="sm" variant={type === t ? "default" : "outline"} onClick={() => setType(t)}>
-                    {t}
+                    {sentenceCase(t)}
                   </Button>
                 ))}
               </div>
@@ -64,7 +65,7 @@ export default function RecommendationsPage() {
                 <div key={c.id} className="flex items-center justify-between rounded-lg border border-border p-2.5">
                   <div>
                     <p className="text-sm font-medium">{c.title}</p>
-                    <p className="text-xs text-muted-foreground">{PLATFORM_MAP[c.platform].name} · {c.type}</p>
+                    <p className="text-xs text-muted-foreground">{PLATFORM_MAP[c.platform].name} · {sentenceCase(c.type)}</p>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => { toggleFeatured(c.id); toast.success("Unfeatured") }}>
                     Unfeature

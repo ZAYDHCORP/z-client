@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { sentenceCase } from "@/lib/text"
 import type { ContentStatus, PlatformId, VerificationStatus } from "@/lib/gate/types"
 import { PLATFORM_MAP } from "@/lib/gate/platforms"
 
@@ -36,12 +37,12 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
         statusStyles[key] ?? "bg-muted text-muted-foreground",
         className,
       )}
     >
-      {label ?? key.replace(/_/g, " ")}
+      {label ?? sentenceCase(key)}
     </span>
   )
 }
@@ -57,11 +58,11 @@ export function VerifyBadge({ status }: { status: VerificationStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
         verifyStyles[status],
       )}
     >
-      {status.replace(/_/g, " ")}
+      {sentenceCase(status)}
     </span>
   )
 }

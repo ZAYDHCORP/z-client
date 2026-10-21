@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { CrudTable } from "@/components/gate/crud-table"
+import { FilePreviewDialog } from "@/components/gate/file-preview"
 import { useGate } from "@/lib/gate/store"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -14,6 +15,7 @@ export default function MediaLibraryPage() {
   }, [ensureMediaLoaded])
 
   const [folder, setFolder] = useState("all")
+  const [previewing, setPreviewing] = useState<MediaAsset | null>(null)
 
   const folders = useMemo(
     () => ["all", ...Array.from(new Set(data.mediaAssets.map((m) => m.folder)))],
@@ -39,6 +41,7 @@ export default function MediaLibraryPage() {
       </div>
 
       <CrudTable
+        onPreview={(row) => setPreviewing(row)}
         onLoadMore={() => loadMore("mediaAssets")}
         hasMore={hasMore("mediaAssets")}
         loadingMore={isResourceLoading("mediaAssets")}
@@ -60,6 +63,7 @@ export default function MediaLibraryPage() {
           hash: Math.random().toString(36).slice(2, 8),
         })}
         onSave={(item) => {
+          if ((item as MediaAsset & { __uploading?: boolean }).__uploading) { toast.info("Please wait — the file is still uploading."); return false }
           if (!item.url) { toast.error("Choose a file to upload."); return false }
           if (!item.name.trim()) { toast.error("Give the file a name."); return false }
           data.mediaAssets.some((m) => m.id === item.id) ? updateMedia(item.id, item) : addMedia(item)
@@ -78,7 +82,7 @@ export default function MediaLibraryPage() {
             header: "Asset",
             cell: (r) => (
               <span className="flex items-center gap-2 font-medium">
-                {r.type === "image" ? <ImageIcon className="h-4 w-4 text-sky-500" /> : r.type === "pdf" ? <FileText className="h-4 w-4 text-rose-500" /> : <Music className="h-4 w-4 text-violet-500" />}
+                {r.type === "image" && r.url ? <img src={r.url} alt="" className="h-8 w-8 rounded object-cover" /> : r.type === "image" ? <ImageIcon className="h-4 w-4 text-sky-500" /> : r.type === "pdf" ? <FileText className="h-4 w-4 text-rose-500" /> : <Music className="h-4 w-4 text-violet-500" />}
                 {r.name}
               </span>
             ),
@@ -91,6 +95,10 @@ export default function MediaLibraryPage() {
             cell: (r) => (r.isDuplicate ? <span className="text-amber-600">possible dup</span> : <span className="text-muted-foreground">—</span>),
           },
         ]}
+      />
+      <FilePreviewDialog
+        file={previewing ? { url: previewing.url, name: previewing.name, mime: previewing.mime } : null}
+        onClose={() => setPreviewing(null)}
       />
     </div>
   )
