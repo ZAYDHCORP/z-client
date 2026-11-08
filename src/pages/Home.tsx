@@ -31,7 +31,7 @@ import {
   FileCode,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { playHeartbeatSound } from "@/components/HeartbeatAudio";
 import GateReader from "@/components/GateReader";
@@ -83,7 +83,17 @@ export default function Home() {
   };
   const user = getCachedUser();
   const navigate = useNavigate();
+  const { hash } = useLocation();
   const signedIn = Boolean(user?.email);
+
+  // Arriving from another page (e.g. /membership) with /#gate-feed — jump to that section.
+  useEffect(() => {
+    if (!hash) return;
+    const t = window.setTimeout(() => {
+      document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+    return () => window.clearTimeout(t);
+  }, [hash]);
   const userRole: "user" | "admin" = user?.role === "admin" ? "admin" : "user";
   const userName =
     user?.name ?? (user?.email ? user.email.split("@")[0] : "Guest");
@@ -224,6 +234,18 @@ export default function Home() {
                 >
                   {item}
                 </a>
+              ) : item === "Membership" ? (
+                <a
+                  className="rounded-full px-4 py-2 text-zinc-700 transition hover:bg-black hover:text-white dark:text-zinc-200 dark:hover:bg-white dark:hover:text-black"
+                  href="/membership"
+                  key={item}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate("/membership");
+                  }}
+                >
+                  {item}
+                </a>
               ) : (
                 <a
                   className="rounded-full px-4 py-2 text-zinc-700 transition hover:bg-black hover:text-white dark:text-zinc-200 dark:hover:bg-white dark:hover:text-black"
@@ -295,6 +317,19 @@ export default function Home() {
                   onClick={() => {
                     closeMobileMenu();
                     navigate(signedIn ? getPostLoginPath(user) : "/signin");
+                  }}
+                  className={itemClass}
+                  style={itemStyle}
+                >
+                  <Icon className="text-[#9a6d35] dark:text-[#d5a85c]" size={22} />
+                  {item}
+                </button>
+              ) : item === "Membership" ? (
+                <button
+                  key={item}
+                  onClick={() => {
+                    closeMobileMenu();
+                    navigate("/membership");
                   }}
                   className={itemClass}
                   style={itemStyle}

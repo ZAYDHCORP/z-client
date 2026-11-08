@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Link, useNavigate, useSearchParams } from "react-router-dom"
-import { AlertTriangle, ArrowLeft, Check, CheckCircle2, Loader2, ShieldCheck, XCircle } from "lucide-react"
+import { useNavigate, useSearchParams } from "react-router-dom"
+import { AlertTriangle, Check, CheckCircle2, Loader2, ShieldCheck, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { GateLogo } from "@/components/gate/logo"
+import { SiteHeader } from "@/components/home/SiteHeader"
 import { getCachedUser } from "@/lib/client-auth"
 import { createOrder, openCheckout, refreshRates, type CheckoutOrder, type CheckoutResult } from "@/lib/checkout"
 
@@ -105,6 +105,11 @@ export default function MembershipPage() {
     const { plan, order } = review
     setPaying(true)
     note("razorpay → opening", { orderId: order.orderId })
+    // Close our modal first: a Radix dialog traps focus and blocks pointer events on
+    // everything outside it, which would make Razorpay's inputs impossible to type in.
+    setReview(null)
+    await new Promise((r) => setTimeout(r, 350))
+    document.body.style.pointerEvents = ""
     try {
       const outcome = await openCheckout({
         order,
@@ -112,14 +117,14 @@ export default function MembershipPage() {
         prefill: { name: user?.name ?? undefined, email: user?.email ?? undefined },
       })
       note("razorpay → result", outcome)
-      if (outcome.status !== "dismissed") {
-        setReview(null)
+      if (outcome.status === "dismissed") {
+        setReview({ plan, order }) // window closed without paying — bring the review back
+      } else {
         setResult({ plan, order, outcome })
       }
     } catch (err) {
       note("razorpay → error", { message: (err as Error).message })
       setError((err as Error).message)
-      setReview(null)
     } finally {
       setPaying(false)
     }
@@ -127,18 +132,7 @@ export default function MembershipPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2">
-            <GateLogo size="md" />
-          </Link>
-          <Button variant="ghost" asChild>
-            <Link to="/">
-              <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to Gate
-            </Link>
-          </Button>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-6xl px-4 py-10">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
