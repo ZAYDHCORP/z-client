@@ -109,6 +109,11 @@ export const API = {
     THEO_AFTER_SALAH: `${BASE}/admin/theocentric/singletons/after-salah`,
     THEO_SETTINGS: `${BASE}/admin/theocentric/singletons/settings`,
   },
+  // Customer checkout. (Gateway webhooks are server-to-server and are NOT defined here.)
+  CHECKOUT: {
+    CREATE_ORDER: `${BASE}/payments/create-order`,
+    REFRESH_RATES: `${BASE}/payments/refresh-rates`,
+  },
   PODCASTS: `${BASE}/podcasts`,
 } as const;
 

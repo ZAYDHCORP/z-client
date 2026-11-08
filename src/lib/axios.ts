@@ -22,12 +22,14 @@ const isPublicEndpoint = (url?: string) =>
   PUBLIC_ENDPOINTS.some((endpoint) => url?.includes(endpoint));
 
 /**
- * Payment checkout (`/payments/*`) and gateway webhooks (`/webhooks/*`) must
- * never be triggered from the browser — checkout belongs to the real customer
- * flow and webhooks are signed server-to-server calls. The admin read-only
- * reporting endpoints live under `/admin/memberships/payments` and are fine.
+ * Gateway webhooks (`/webhooks/*`) are signed server-to-server calls and must
+ * never be sent from the browser. Under `/payments/*` only the two customer
+ * checkout calls are allowed (create an order, refresh exchange rates); every
+ * other payments path stays blocked. The admin read-only reporting endpoints
+ * live under `/admin/memberships/payments` and are fine.
  */
 const BLOCKED_PATH = /^\/(payments|webhooks)(\/|$|\?)/;
+const ALLOWED_CHECKOUT_PATH = /^\/payments\/(create-order|refresh-rates)\/?$/;
 
 export function isBlockedPaymentRequest(url?: string): boolean {
   if (!url) return false;
@@ -37,7 +39,8 @@ export function isBlockedPaymentRequest(url?: string): boolean {
   } catch {
     /* relative path — test as-is */
   }
-  return BLOCKED_PATH.test(path.replace(/^\/api\/v\d+/, ""));
+  const clean = path.replace(/^\/api\/v\d+/, "");
+  return BLOCKED_PATH.test(clean) && !ALLOWED_CHECKOUT_PATH.test(clean);
 }
 
 let clientDataCache: Awaited<ReturnType<typeof getClientData>> | null = null;
@@ -65,7 +68,7 @@ api.interceptors.request.use(
     if (isBlockedPaymentRequest(config.url)) {
       return Promise.reject({
         status: 403,
-        message: "Payment endpoints cannot be called from the admin browser.",
+        message: "This payment endpoint cannot be called from the browser.",
         blockedByGuard: true,
       });
     }

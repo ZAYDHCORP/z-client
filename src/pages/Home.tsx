@@ -892,7 +892,10 @@ export default function Home() {
                 </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <button className="rounded-full bg-white px-7 py-4 text-sm font-black text-black shadow-xl transition hover:scale-[1.02]">
+                  <button
+                    onClick={() => navigate("/membership?plan=lifetime")}
+                    className="rounded-full bg-white px-7 py-4 text-sm font-black text-black shadow-xl transition hover:scale-[1.02]"
+                  >
                     Claim Lifetime Membership | ₹9,999
                   </button>
                   <a
